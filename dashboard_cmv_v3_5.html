@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMV Dashboard — Fev 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#0f111a;
+  --s1:#161924;
+  --s2:#1e2235;
+  --s3:#252b40;
+  --border:#2c3350;
+  --border2:#363d5a;
+  --accent:#fbbf24;
+  --accent2:#34d399;
+  --accent3:#60a5fa;
+  --danger:#f87171;
+  --warn:#fbbf24;
+  --good:#34d399;
+  --text:#f1f3fa;
+  --text2:#c8cde0;
+  --muted:#8890b0;
+  --muted2:#5c6480;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;}
+
+/* LAYOUT */
+.app{display:flex;flex-direction:column;height:100vh;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.logo{font-size:1.1rem;font-weight:800;color:var(--accent);letter-spacing:-0.3px;}
+.topbar-sub{font-size:0.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;padding:3px 10px;background:var(--s2);border:1px solid var(--border);border-radius:5px;}
+.badge-fev{font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--accent2);padding:4px 12px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:20px;}
+
+/* TABS */
+.tabs-nav{display:flex;gap:0;padding:0 28px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;}
+.tab-btn{padding:12px 20px;font-size:0.82rem;font-weight:600;background:transparent;border:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;letter-spacing:0.01em;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn:hover:not(.active){color:var(--text2);}
+
+/* PAGES */
+.page{display:none;flex:1;overflow:auto;padding:24px 28px 32px;}
+.page.active{display:block;}
+
+/* ===== KPI ===== */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px 22px;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--accent));border-radius:12px 12px 0 0;}
+.kpi .lb{font-size:0.7rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;}
+.kpi .val{font-size:1.9rem;font-weight:800;letter-spacing:-1.5px;color:var(--text);line-height:1;}
+.kpi .sub{font-size:0.72rem;color:var(--muted);margin-top:6px;}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:0.68rem;font-weight:600;padding:3px 9px;border-radius:20px;margin-top:8px;}
+.pill.g{background:rgba(52,211,153,.12);color:var(--good);}
+.pill.w{background:rgba(251,191,36,.12);color:var(--warn);}
+.pill.b{background:rgba(248,113,113,.14);color:var(--danger);}
+
+/* ===== CARD ===== */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
+.card-title{font-size:0.72rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title span{font-size:0.65rem;padding:2px 7px;border-radius:4px;background:var(--s2);color:var(--text2);font-weight:500;text-transform:none;letter-spacing:0;}
+
+/* ===== CHARTS ===== */
+.cg2{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;margin-bottom:18px;}
+.cg-equal{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+
+/* ===== GRUPOS GRID ===== */
+.grupo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px;}
+.grupo-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.grupo-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gc,var(--accent));border-radius:12px 0 0 12px;}
+.grupo-card:hover{border-color:var(--gc,var(--accent));background:var(--s2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.grupo-card .gname{font-size:0.75rem;font-weight:700;color:var(--gc,var(--accent));margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;}
+.grupo-card .gfat{font-size:1.25rem;font-weight:800;letter-spacing:-0.5px;color:var(--text);padding-left:4px;}
+.grupo-card .gsub{font-size:0.67rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px;padding-left:4px;}
+.grupo-card .gcmv-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);padding-left:4px;}
+.grupo-card .gcmv-val{font-size:0.85rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.grupo-card .gcmv-lbl{font-size:0.63rem;color:var(--muted);font-weight:600;}
+.cmvbar{height:4px;background:var(--s3);border-radius:2px;margin-top:5px;overflow:hidden;}
+.cmvbar-fill{height:100%;border-radius:2px;transition:width .4s;}
+
+/* ===== BACK ===== */
+.back-btn{display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:18px;padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:var(--s1);transition:all .15s;}
+.back-btn:hover{color:var(--text);border-color:var(--border2);background:var(--s2);}
+
+/* ===== GRUPO HEADER ===== */
+.grupo-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px;}
+.grupo-header h2{font-size:1.5rem;font-weight:800;letter-spacing:-0.5px;color:var(--text);}
+.grupo-kpis{display:flex;gap:10px;flex-wrap:wrap;}
+.gkpi{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:12px 18px;text-align:center;min-width:110px;}
+.gkpi .gv{font-size:1.15rem;font-weight:800;line-height:1.1;}
+.gkpi .gl{font-size:0.65rem;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-top:4px;}
+
+/* ===== TABLE ===== */
+.tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.tbl-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;border-bottom:1px solid var(--border);gap:12px;}
+.tbl-top-left{display:flex;align-items:center;gap:12px;}
+.tbl-title{font-size:0.72rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+.tbl-count{font-size:0.68rem;padding:2px 8px;border-radius:5px;background:var(--s2);color:var(--text2);font-family:'JetBrains Mono',monospace;}
+.tbl-actions{display:flex;align-items:center;gap:8px;}
+.tbl-search{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:0.78rem;color:var(--text);font-family:'Inter',sans-serif;width:220px;outline:none;transition:border .15s;}
+.tbl-search:focus{border-color:var(--accent);}
+.tbl-search::placeholder{color:var(--muted);}
+.filter-btns{display:flex;gap:6px;}
+.filter-btn{padding:5px 11px;border-radius:6px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;}
+.filter-btn.active,.filter-btn:hover{background:var(--s2);color:var(--text);border-color:var(--border2);}
+.filter-btn.active{border-color:var(--accent);color:var(--accent);}
+
+.tbl-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;text-align:left;background:var(--s2);border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;user-select:none;transition:color .15s;}
+thead th:hover{color:var(--text);}
+thead th.sort-asc::after{content:' ↑';color:var(--accent);}
+thead th.sort-desc::after{content:' ↓';color:var(--accent);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,.028);}
+tbody td{padding:10px 14px;font-size:0.82rem;color:var(--text2);vertical-align:middle;}
+tbody td.name-cell{font-weight:600;color:var(--text);font-size:0.84rem;}
+tbody td.mono{font-family:'JetBrains Mono',monospace;font-size:0.76rem;}
+
+/* EDITABLE CELLS */
+.editable{cursor:text;position:relative;}
+.editable:hover .edit-val{background:var(--s3);border-radius:5px;}
+.edit-val{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:5px;transition:background .12s;min-width:70px;}
+.edit-val .pencil{opacity:0;font-size:0.6rem;color:var(--muted);transition:opacity .12s;}
+.editable:hover .edit-val .pencil{opacity:1;}
+.edit-input{background:var(--s2);border:1.5px solid var(--accent);border-radius:5px;padding:3px 7px;font-size:0.76rem;font-family:'JetBrains Mono',monospace;color:var(--text);outline:none;width:90px;}
+
+/* CMV BAR IN TABLE */
+.cmv-cell{display:flex;align-items:center;gap:8px;}
+.cmv-bar-bg{width:64px;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.cmv-bar-fill{height:100%;border-radius:3px;transition:width .3s;}
+.cmv-pct{font-family:'JetBrains Mono',monospace;font-size:0.76rem;font-weight:700;min-width:42px;text-align:right;}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;flex-shrink:0;}
+
+/* STATUS TAGS */
+.tag{display:inline-flex;align-items:center;gap:3px;font-size:0.66rem;font-weight:700;padding:3px 8px;border-radius:5px;white-space:nowrap;}
+.tag.ok{background:rgba(52,211,153,.1);color:var(--good);border:1px solid rgba(52,211,153,.2);}
+.tag.warn{background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.2);}
+.tag.bad{background:rgba(248,113,113,.12);color:var(--danger);border:1px solid rgba(248,113,113,.2);}
+.tag.star{background:rgba(96,165,250,.1);color:var(--accent3);border:1px solid rgba(96,165,250,.2);}
+
+.empty-row{text-align:center;padding:40px;color:var(--muted);font-size:0.8rem;}
+
+/* MINI CHARTS */
+.mini-charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+
+/* ===== OPORTUNIDADES ===== */
+.op-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.op-header h2{font-size:1.35rem;font-weight:800;letter-spacing:-0.4px;}
+.op-sub{font-size:0.78rem;color:var(--muted);margin-bottom:20px;line-height:1.5;}
+.op-sub strong{color:var(--accent2);}
+.op-filters{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;align-items:center;}
+.op-filter-label{font-size:0.72rem;font-weight:700;color:var(--muted);margin-right:4px;text-transform:uppercase;letter-spacing:.05em;}
+.op-btn{padding:6px 14px;border-radius:7px;font-size:0.76rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;font-family:'Inter',sans-serif;}
+.op-btn:hover{background:var(--s2);color:var(--text);}
+.op-btn.active{background:var(--accent2);color:#0f111a;border-color:var(--accent2);}
+.op-search{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:0.78rem;color:var(--text);font-family:'Inter',sans-serif;outline:none;width:200px;transition:border .15s;margin-left:auto;}
+.op-search:focus{border-color:var(--accent2);}
+.op-search::placeholder{color:var(--muted);}
+
+.op-grupos{display:flex;flex-direction:column;gap:16px;}
+.op-grupo-block{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.op-grupo-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--s2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s;}
+.op-grupo-head:hover{background:var(--s3);}
+.op-grupo-name{font-size:0.9rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+.op-grupo-badge{font-size:0.65rem;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;background:var(--s3);color:var(--text2);}
+.op-grupo-meta{display:flex;align-items:center;gap:16px;font-size:0.72rem;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.op-chevron{font-size:0.75rem;color:var(--muted);transition:transform .2s;}
+.op-grupo-body{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px 16px;}
+.op-grupo-body.collapsed{display:none;}
+
+.op-item{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;transition:border .2s,transform .15s;}
+.op-item:hover{border-color:var(--accent2);transform:translateY(-1px);}
+.op-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--ic,var(--accent2));}
+.op-item .op-rank{position:absolute;top:10px;right:12px;font-size:0.65rem;font-family:'JetBrains Mono',monospace;color:var(--muted2);font-weight:700;}
+.op-item .op-name{font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:6px;padding-right:28px;line-height:1.3;}
+.op-item .op-cmv-big{font-size:1.5rem;font-weight:800;font-family:'JetBrains Mono',monospace;letter-spacing:-1px;margin-bottom:2px;}
+.op-item .op-cmv-lbl{font-size:0.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+.op-item-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.op-stat{font-size:0.68rem;}
+.op-stat .ov{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text2);}
+.op-stat .ol{color:var(--muted);font-size:0.62rem;margin-top:1px;}
+.op-action-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.chip{font-size:0.63rem;font-weight:600;padding:3px 8px;border-radius:4px;background:var(--s3);color:var(--text2);border:1px solid var(--border);}
+
+.op-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:0.82rem;}
+.op-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+
+/* NOTICE */
+.edit-notice{font-size:0.72rem;color:var(--muted);padding:8px 0 14px;display:flex;align-items:center;gap:6px;}
+.edit-notice .dot-small{width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="logo">🍽 CMV Dashboard</span>
+      <span class="topbar-sub">278 produtos · 20 grupos</span>
+    </div>
+    <span class="badge-fev">FEV / 2026</span>
+  </div>
+
+  <!-- TABS NAV -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="showTab('dashboard',this)">📊 Dashboard</button>
+    <button class="tab-btn" onclick="showTab('grupos',this)">📂 Grupos & Itens</button>
+    <button class="tab-btn" onclick="showTab('oportunidades',this)">🎯 Oportunidades</button>
+  </div>
+
+  <!-- ==================== DASHBOARD ==================== -->
+  <div class="page active" id="page-dashboard">
+    <div class="kpi-row" style="margin-top:4px;">
+      <div class="kpi" style="--kc:#fbbf24">
+        <div class="lb">Faturamento Total</div>
+        <div class="val">R$ 613,8K</div>
+        <div class="sub">20 grupos · 278 produtos</div>
+        <span class="pill w">Fevereiro 2026</span>
+      </div>
+      <div class="kpi" style="--kc:#34d399">
+        <div class="lb">CMV Médio Global</div>
+        <div class="val">28,2%</div>
+        <div class="sub">Benchmark ideal: abaixo de 35%</div>
+        <span class="pill g">✓ Dentro do padrão</span>
+      </div>
+      <div class="kpi" style="--kc:#60a5fa">
+        <div class="lb">Maior Faturador</div>
+        <div class="val">Cervejas</div>
+        <div class="sub">R$ 175.809 · 8.475 unidades</div>
+        <span class="pill w">CMV 33,4%</span>
+      </div>
+      <div class="kpi" style="--kc:#f87171">
+        <div class="lb">CMV Mais Alto</div>
+        <div class="val">Frutas Ad.</div>
+        <div class="sub">CMV médio 53,1% — revisar custo</div>
+        <span class="pill b">⚠ Atenção</span>
+      </div>
+    </div>
+
+    <div class="cg2">
+      <div class="card">
+        <div class="card-title">Faturamento por Grupo <span>R$ — do maior para o menor</span></div>
+        <canvas id="cFat" height="290"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Participação no Faturamento</div>
+        <canvas id="cPie" height="290"></canvas>
+      </div>
+    </div>
+
+    <div class="cg-equal">
+      <div class="card">
+        <div class="card-title">CMV Médio por Grupo <span>🟢 &lt;30% · 🟡 30–40% · 🔴 &gt;40%</span></div>
+        <canvas id="cCMV" height="310"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Top 12 Produtos por Faturamento</div>
+        <div id="rankList" style="overflow-y:auto;max-height:320px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== GRUPOS ==================== -->
+  <div class="page" id="page-grupos">
+
+    <!-- === LISTAGEM DE GRUPOS === -->
+    <div id="grupos-list-view">
+      <p style="margin:4px 0 16px;font-size:0.78rem;color:var(--muted);">Clique em um grupo para ver e editar os itens com CMV individual.</p>
+      <div class="grupo-grid" id="grupoGrid"></div>
+    </div>
+
+    <!-- === DETALHE DE ITENS === -->
+    <div id="itens-view" style="display:none;">
+      <button class="back-btn" onclick="voltarGrupos()">
+        ← Voltar para Grupos
+      </button>
+
+      <div class="grupo-header">
+        <h2 id="grupoDrillTitle"></h2>
+        <div class="grupo-kpis" id="grupoKpisRow"></div>
+      </div>
+
+      <!-- TABELA PRIMEIRO -->
+      <div class="tbl-wrap">
+        <div class="tbl-top">
+          <div class="tbl-top-left">
+            <span class="tbl-title">Itens do Grupo</span>
+            <span class="tbl-count" id="tblCount"></span>
+          </div>
+          <div class="tbl-actions">
+            <div class="filter-btns">
+              <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
+              <button class="filter-btn" onclick="setFilter('alto',this)">CMV Alto &gt;35%</button>
+              <button class="filter-btn" onclick="setFilter('eficiente',this)">Eficientes</button>
+            </div>
+            <input class="tbl-search" id="itemSearch" placeholder="🔍 Buscar produto…" oninput="renderItemTable()">
+          </div>
+        </div>
+        <div class="edit-notice">
+          <span class="dot-small"></span>
+          <strong style="color:var(--accent)">Custo Unit.</strong> e <strong style="color:var(--accent)">Preço Médio</strong> são editáveis — clique no valor para alterar. O CMV recalcula automaticamente.
+        </div>
+        <div class="tbl-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortItems('produto')">Produto</th>
+              <th onclick="sortItems('qtd_vendida')">Qtd Vendida</th>
+              <th onclick="sortItems('valor_venda')">Faturamento</th>
+              <th onclick="sortItems('preco_medio')" style="color:var(--accent)">Preço Médio ✏</th>
+              <th onclick="sortItems('custo_unitario')" style="color:var(--accent)">Custo Unit. ✏</th>
+              <th onclick="sortItems('margem')">Margem R$</th>
+              <th onclick="sortItems('cmv')">CMV %</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="itensTbody"></tbody>
+        </table>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS DEPOIS -->
+      <div class="mini-charts-row">
+        <div class="card">
+          <div class="card-title">CMV por Item (%) <span>top 15</span></div>
+          <canvas id="cItemCMV" height="240"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Faturamento por Item <span>top 15</span></div>
+          <canvas id="cItemFat" height="240"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== OPORTUNIDADES ==================== -->
+  <div class="page" id="page-oportunidades">
+    <div style="margin-top:4px;">
+      <h2 style="font-size:1.35rem;font-weight:800;letter-spacing:-0.4px;margin-bottom:6px;">🎯 Oportunidades de Ação</h2>
+    </div>
+    <p class="op-sub">
+      Itens com <strong>melhor CMV por grupo</strong> — produtos mais eficientes para focar ações comerciais:
+      destacar no cardápio, treinar equipe, criar combos, promoções direcionadas e aumentar mix de venda.
+    </p>
+    <div class="op-kpi-row" id="opKpiRow"></div>
+    <div class="op-filters">
+      <span class="op-filter-label">Top por grupo:</span>
+      <button class="op-btn active" onclick="setOpTop(3,this)">Top 3</button>
+      <button class="op-btn" onclick="setOpTop(5,this)">Top 5</button>
+      <button class="op-btn" onclick="setOpTop(10,this)">Top 10</button>
+      <span class="op-filter-label" style="margin-left:12px;">Filtrar:</span>
+      <button class="op-btn active" onclick="setOpFat('todos',this)">Todos</button>
+      <button class="op-btn" onclick="setOpFat('fat500',this)">Fat &gt; R$ 500</button>
+      <button class="op-btn" onclick="setOpFat('qtd50',this)">Qtd &gt; 50 unid</button>
+      <input class="op-search" id="opSearch" placeholder="🔍 Buscar produto…" oninput="renderOportunidades()">
+    </div>
+    <div class="op-grupos" id="opGrupos"></div>
+  </div>
+
+</div>
+
+<script>
+const RAW_DATA = [{"categoria": "ACOMPANHAMENTO AÇAÍ", "produto": "MEL", "qtd_vendida": 2.0, "valor_venda": 5.0, "custo_unitario": 0.0001, "preco_medio": 2.5, "participacao": 0.0059665871121718375, "margem": 2.4999, "cmv": 4e-05}, {"categoria": "ACOMPANHAMENTO AÇAÍ", "produto": "LEITE CONDENSADO", "qtd_vendida": 89.0, "valor_venda": 222.5, "custo_unitario": 0.7, "preco_medio": 2.5, "participacao": 0.26551312649164677, "margem": 1.8, "cmv": 0.27999999999999997}, {"categoria": "ACOMPANHAMENTO AÇAÍ", "produto": "NUTELLA ACAI", "qtd_vendida": 11.0, "valor_venda": 28.5, "custo_unitario": 1.26, "preco_medio": 2.590909090909091, "participacao": 0.03400954653937947, "margem": 1.3309090909090908, "cmv": 0.48631578947368426}, {"categoria": "ACOMPANHAMENTO AÇAÍ", "produto": "LEITE EM PÓ", "qtd_vendida": 70.0, "valor_venda": 175.0, "custo_unitario": 1.85, "preco_medio": 2.5, "participacao": 0.20883054892601433, "margem": 0.6499999999999999, "cmv": 0.74}, {"categoria": "ACOMPANHAMENTO AÇAÍ", "produto": "GRANOLA", "qtd_vendida": 116.0, "valor_venda": 232.0, "custo_unitario": 0.99, "preco_medio": 2.0, "participacao": 0.27684964200477324, "margem": 1.01, "cmv": 0.495}, {"categoria": "ACOMPANHAMENTO AÇAÍ", "produto": "MORANGO ACAI", "qtd_vendida": 70.0, "valor_venda": 175.0, "custo_unitario": 1.73000857142857, "preco_medio": 2.5, "participacao": 0.20883054892601433, "margem": 0.76999142857143, "cmv": 0.692003428571428}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CACHAÇA LIMÃO", "qtd_vendida": 213.0, "valor_venda": 5729.7, "custo_unitario": 2.09, "preco_medio": 26.9, "participacao": 0.22157897789895004, "margem": 24.81, "cmv": 0.07769516728624536}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT LIMÃO", "qtd_vendida": 63.0, "valor_venda": 2261.7, "custo_unitario": 5.99813492063492, "preco_medio": 35.9, "participacao": 0.08746447009687336, "margem": 29.90186507936508, "cmv": 0.167078967148605}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE MORANGO", "qtd_vendida": 72.0, "valor_venda": 2152.8, "custo_unitario": 3.96705694444444, "preco_medio": 29.900000000000002, "participacao": 0.08325308892627183, "margem": 25.932943055555562, "cmv": 0.1326774897807505}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE F. VERMELHAS", "qtd_vendida": 64.0, "valor_venda": 1913.6, "custo_unitario": 5.3683453125, "preco_medio": 29.9, "participacao": 0.07400274571224162, "margem": 24.531654687499998, "cmv": 0.17954332148829433}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CACHAÇA MORANGO", "qtd_vendida": 57.0, "valor_venda": 1533.3, "custo_unitario": 4.2222, "preco_medio": 26.9, "participacao": 0.059295782818028886, "margem": 22.677799999999998, "cmv": 0.15695910780669145}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CACHAÇA F VERMELHAS", "qtd_vendida": 60.0, "valor_venda": 1614.0, "custo_unitario": 5.92, "preco_medio": 26.9, "participacao": 0.06241661349266199, "margem": 20.979999999999997, "cmv": 0.2200743494423792}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT F VERMELHAS", "qtd_vendida": 47.0, "valor_venda": 1687.3, "custo_unitario": 9.15791914893617, "preco_medio": 35.9, "participacao": 0.06525127134211188, "margem": 26.74208085106383, "cmv": 0.25509524091744207}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CACHAÇA MARACUJA", "qtd_vendida": 48.0, "valor_venda": 1291.2, "custo_unitario": 6.41, "preco_medio": 26.900000000000002, "participacao": 0.049933290794129594, "margem": 20.490000000000002, "cmv": 0.23828996282527878}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE LIMÃO", "qtd_vendida": 29.0, "valor_venda": 867.1, "custo_unitario": 2.3316724137931, "preco_medio": 29.900000000000002, "participacao": 0.03353249415085949, "margem": 27.5683275862069, "cmv": 0.07798235497635786}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT MORANGO", "qtd_vendida": 23.0, "valor_venda": 825.7, "custo_unitario": 7.59468695652174, "preco_medio": 35.9, "participacao": 0.03193147320996964, "margem": 28.305313043478257, "cmv": 0.21155116870534096}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ORLOFF LIMÃO", "qtd_vendida": 17.0, "valor_venda": 508.3, "custo_unitario": 2.45081764705882, "preco_medio": 29.900000000000002, "participacao": 0.01965697932981418, "margem": 27.449182352941182, "cmv": 0.0819671453865826}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CHACAÇA CAJU", "qtd_vendida": 18.0, "valor_venda": 484.2, "custo_unitario": 5.01676111111111, "preco_medio": 26.9, "participacao": 0.018724984047798595, "margem": 21.88323888888889, "cmv": 0.18649669558033868}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE MARACUJA", "qtd_vendida": 17.0, "valor_venda": 508.3, "custo_unitario": 6.533, "preco_medio": 29.900000000000002, "participacao": 0.01965697932981418, "margem": 23.367, "cmv": 0.21849498327759198}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ORLOFF MORANGO", "qtd_vendida": 12.0, "valor_venda": 358.8, "custo_unitario": 4.02316666666667, "preco_medio": 29.900000000000002, "participacao": 0.013875514821045305, "margem": 25.87683333333333, "cmv": 0.1345540691192866}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CACHAÇA ABACAXI", "qtd_vendida": 13.0, "valor_venda": 349.7, "custo_unitario": 3.57104615384615, "preco_medio": 26.9, "participacao": 0.013523599590076764, "margem": 23.328953846153848, "cmv": 0.1327526451243922}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CACHAÇA AMORA", "qtd_vendida": 14.0, "valor_venda": 376.6, "custo_unitario": 5.51527142857143, "preco_medio": 26.900000000000002, "participacao": 0.014563876481621132, "margem": 21.38472857142857, "cmv": 0.2050286776420606}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SELETA LIMÃO", "qtd_vendida": 11.0, "valor_venda": 328.9, "custo_unitario": 4.7242, "preco_medio": 29.9, "participacao": 0.012719221919291528, "margem": 25.1758, "cmv": 0.158}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT MARACUJA", "qtd_vendida": 10.0, "valor_venda": 359.0, "custo_unitario": 9.09174, "preco_medio": 35.9, "participacao": 0.013883249221725931, "margem": 26.808259999999997, "cmv": 0.2532518105849582}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT CAJU", "qtd_vendida": 9.0, "valor_venda": 323.1, "custo_unitario": 9.22415555555556, "preco_medio": 35.900000000000006, "participacao": 0.01249492429955334, "margem": 26.675844444444444, "cmv": 0.25694026617146404}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ORLOFF MARACUJA", "qtd_vendida": 10.0, "valor_venda": 299.0, "custo_unitario": 7.10764, "preco_medio": 29.9, "participacao": 0.011562929017537754, "margem": 22.79236, "cmv": 0.23771371237458194}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT ABACAXI", "qtd_vendida": 8.0, "valor_venda": 287.2, "custo_unitario": 7.587, "preco_medio": 35.9, "participacao": 0.011106599377380745, "margem": 28.313, "cmv": 0.21133704735376044}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE CAJU", "qtd_vendida": 8.0, "valor_venda": 239.2, "custo_unitario": 5.4276375, "preco_medio": 29.9, "participacao": 0.009250343214030203, "margem": 24.4723625, "cmv": 0.18152633779264216}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT AMORA", "qtd_vendida": 7.0, "valor_venda": 251.3, "custo_unitario": 9.67, "preco_medio": 35.9, "participacao": 0.009718274455208153, "margem": 26.229999999999997, "cmv": 0.2693593314763231}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ORLOFF F. VERMELHAS", "qtd_vendida": 7.0, "valor_venda": 209.3, "custo_unitario": 5.86345714285714, "preco_medio": 29.900000000000002, "participacao": 0.008094050312276427, "margem": 24.036542857142862, "cmv": 0.19610224558050635}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE ABACAXI", "qtd_vendida": 8.0, "valor_venda": 199.2, "custo_unitario": 3.94295, "preco_medio": 24.9, "participacao": 0.00770346307790475, "margem": 20.95705, "cmv": 0.15835140562248998}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE AMORA", "qtd_vendida": 5.0, "valor_venda": 149.5, "custo_unitario": 6.0337, "preco_medio": 29.9, "participacao": 0.005781464508768877, "margem": 23.8663, "cmv": 0.20179598662207357}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ORLOFF ABACAXI", "qtd_vendida": 4.0, "valor_venda": 119.6, "custo_unitario": 4.130625, "preco_medio": 29.9, "participacao": 0.004625171607015101, "margem": 25.769374999999997, "cmv": 0.1381479933110368}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SELETA CAJU", "qtd_vendida": 4.0, "valor_venda": 119.6, "custo_unitario": 7.80975, "preco_medio": 29.9, "participacao": 0.004625171607015101, "margem": 22.090249999999997, "cmv": 0.26119565217391305}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SELETA ABACAXI", "qtd_vendida": 3.0, "valor_venda": 89.7, "custo_unitario": 6.3522, "preco_medio": 29.900000000000002, "participacao": 0.0034688787052613262, "margem": 23.547800000000002, "cmv": 0.21244816053511703}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ORLOFF CAJU", "qtd_vendida": 3.0, "valor_venda": 89.7, "custo_unitario": 6.4142, "preco_medio": 29.900000000000002, "participacao": 0.0034688787052613262, "margem": 23.4858, "cmv": 0.21452173913043476}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA CACHAÇA ACEROLA", "qtd_vendida": 3.0, "valor_venda": 80.7, "custo_unitario": 3.4885, "preco_medio": 26.900000000000002, "participacao": 0.0031208306746330996, "margem": 23.411500000000004, "cmv": 0.12968401486988848}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA ABSOLUT ACEROLA", "qtd_vendida": 2.0, "valor_venda": 71.8, "custo_unitario": 7.55155, "preco_medio": 35.9, "participacao": 0.002776649844345186, "margem": 28.34845, "cmv": 0.21034958217270194}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SAKE ACEROLA", "qtd_vendida": 2.0, "valor_venda": 59.8, "custo_unitario": 4.1367, "preco_medio": 29.9, "participacao": 0.0023125858035075507, "margem": 25.763299999999997, "cmv": 0.1383511705685619}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SELETA MARACUJA", "qtd_vendida": 2.0, "valor_venda": 59.8, "custo_unitario": 8.0256, "preco_medio": 29.9, "participacao": 0.0023125858035075507, "margem": 21.874399999999998, "cmv": 0.26841471571906356}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SELETA MORANGO", "qtd_vendida": 1.0, "valor_venda": 29.9, "custo_unitario": 5.8557, "preco_medio": 29.9, "participacao": 0.0011562929017537753, "margem": 24.0443, "cmv": 0.19584280936454848}, {"categoria": "CAIPIRINHA", "produto": "CAIPIRINHA SELETA F. VERMELHAS", "qtd_vendida": 1.0, "valor_venda": 29.9, "custo_unitario": 7.6357, "preco_medio": 29.9, "participacao": 0.0011562929017537753, "margem": 22.2643, "cmv": 0.25537458193979934}, {"categoria": "CERVEJAS", "produto": "CERVEJA HEINEKEN 600ML", "qtd_vendida": 2657.0, "valor_venda": 63502.3, "custo_unitario": 8.95794395935265, "preco_medio": 23.900000000000002, "participacao": 0.3611994801191062, "margem": 14.942056040647351, "cmv": 0.3748093706842113}, {"categoria": "CERVEJAS", "produto": "CERVEJA ORIGINAL 600ML", "qtd_vendida": 2179.0, "valor_venda": 45541.1, "custo_unitario": 8.26348109224415, "preco_medio": 21.9, "participacao": 0.25903662771351943, "margem": 13.636518907755848, "cmv": 0.3773279037554407}, {"categoria": "CERVEJAS", "produto": "CERVEJA AMSTEL", "qtd_vendida": 1739.0, "valor_venda": 31128.1, "custo_unitario": 5.73108211615871, "preco_medio": 17.9, "participacao": 0.177055847380261, "margem": 12.168917883841289, "cmv": 0.32017218526026314}, {"categoria": "CERVEJAS", "produto": "CERVEJA EISENBAHN 600ML", "qtd_vendida": 477.0, "valor_venda": 9015.3, "custo_unitario": 6.65360251572327, "preco_medio": 19.9, "participacao": 0.05127879892724795, "margem": 13.246397484276729, "cmv": 0.33435188521222464}, {"categoria": "CERVEJAS", "produto": "HEINEKEN ZERO", "qtd_vendida": 260.0, "valor_venda": 4394.0, "custo_unitario": 6.10833846153846, "preco_medio": 16.9, "participacao": 0.02499296113122442, "margem": 10.79166153846154, "cmv": 0.36144014565316335}, {"categoria": "CERVEJAS", "produto": "HEINEKEN LONG NECK", "qtd_vendida": 207.0, "valor_venda": 3498.3, "custo_unitario": 5.45393236714976, "preco_medio": 16.900000000000002, "participacao": 0.019898242131397906, "margem": 11.44606763285024, "cmv": 0.32271789154732305}, {"categoria": "CERVEJAS", "produto": "CORONA LONG NECK", "qtd_vendida": 203.0, "valor_venda": 3623.7, "custo_unitario": 6.39179852216749, "preco_medio": 17.9, "participacao": 0.020611514167323153, "margem": 11.508201477832507, "cmv": 0.3570837163222062}, {"categoria": "CERVEJAS", "produto": "SKOL BEATS SENSES", "qtd_vendida": 185.0, "valor_venda": 3496.5, "custo_unitario": 6.87497189189189, "preco_medio": 18.9, "participacao": 0.019888003776815245, "margem": 12.02502810810811, "cmv": 0.3637551265551265}, {"categoria": "CERVEJAS", "produto": "CORONA ZERO LONG NECK", "qtd_vendida": 161.0, "valor_venda": 2881.9, "custo_unitario": 6.68746708074534, "preco_medio": 17.900000000000002, "participacao": 0.016392174484313987, "margem": 11.212532919254663, "cmv": 0.37360151289080107}, {"categoria": "CERVEJAS", "produto": "CERVEJA AMSTEL LONG NECK", "qtd_vendida": 54.0, "valor_venda": 750.6, "custo_unitario": 4.75, "preco_medio": 13.9, "participacao": 0.0042693938609688325, "margem": 9.15, "cmv": 0.34172661870503596}, {"categoria": "CERVEJAS", "produto": "CERVEJA AMSTEL UTRA LONG NECK", "qtd_vendida": 21.0, "valor_venda": 312.9, "custo_unitario": 3.3131, "preco_medio": 14.899999999999999, "participacao": 0.0017797673049522351, "margem": 11.586899999999998, "cmv": 0.2223557046979866}, {"categoria": "CERVEJAS", "produto": "CERVEJA PRAYA", "qtd_vendida": 8.0, "valor_venda": 151.2, "custo_unitario": 5.315725, "preco_medio": 18.9, "participacao": 0.0008600217849433619, "margem": 13.584274999999998, "cmv": 0.281255291005291}, {"categoria": "CERVEJAS", "produto": "CERVEJA CORONA 600ML", "qtd_vendida": 274.0, "valor_venda": 6822.6, "custo_unitario": 9.17, "preco_medio": 24.900000000000002, "participacao": 0.038806776653138766, "margem": 15.730000000000002, "cmv": 0.36827309236947786}, {"categoria": "CERVEJAS", "produto": "CERVEJA AMSTEL LONG NECK", "qtd_vendida": 50.0, "valor_venda": 691.0, "custo_unitario": 4.215346, "preco_medio": 14.9, "participacao": 0.003930390564787454, "margem": 10.684654, "cmv": 0.28290912751677855}, {"categoria": "CHOPP", "produto": "CHOPP HEINEKEN 500ML", "qtd_vendida": 179.0, "valor_venda": 3562.1, "custo_unitario": 7.97, "preco_medio": 21.9, "participacao": 0.22149470529346293, "margem": 13.93, "cmv": 0.3639269406392694}, {"categoria": "CHOPP", "produto": "TORRE HEINEKEN", "qtd_vendida": 36.0, "valor_venda": 4856.4, "custo_unitario": 55.82, "preco_medio": 139.9, "participacao": 0.3019754882757849, "margem": 84.08000000000001, "cmv": 0.3989992852037169}, {"categoria": "CHOPP", "produto": "DOUBLE CHOPP", "qtd_vendida": 117.0, "valor_venda": 1860.3, "custo_unitario": 0.0, "preco_medio": 15.9, "participacao": 0.11567519167272931, "margem": 15.9, "cmv": 0.0}, {"categoria": "CHOPP", "produto": "CHOPP AMSTEL 500ML", "qtd_vendida": 73.0, "valor_venda": 1379.7, "custo_unitario": 5.25, "preco_medio": 18.9, "participacao": 0.08579103475292407, "margem": 13.649999999999999, "cmv": 0.2777777777777778}, {"categoria": "CHOPP", "produto": "CHOPP HEINEKEN 300ML", "qtd_vendida": 47.0, "valor_venda": 794.3, "custo_unitario": 4.78, "preco_medio": 17.9, "participacao": 0.04939031594132607, "margem": 13.119999999999997, "cmv": 0.26703910614525145}, {"categoria": "CHOPP", "produto": "CHOPP AMSTEL 300ML", "qtd_vendida": 268.0, "valor_venda": 667.8, "custo_unitario": 3.46, "preco_medio": 15.9, "participacao": 0.04152442777995411, "margem": 12.440000000000001, "cmv": 0.21761006289308174}, {"categoria": "CHOPP", "produto": "TORRE AMSTEL", "qtd_vendida": 22.0, "valor_venda": 2791.8, "custo_unitario": 40.42, "preco_medio": 129.9, "participacao": 0.17359673177010468, "margem": 89.48, "cmv": 0.3111624326404927}, {"categoria": "CHOPP", "produto": "PORÇÃO DE FRUTAS", "qtd_vendida": 7.0, "valor_venda": 169.7, "custo_unitario": 6.38985714285714, "preco_medio": 24.24285714285714, "participacao": 0.010552104513714005, "margem": 17.853, "cmv": 0.26357690041249254}, {"categoria": "DELIVERY", "produto": "Marmita do dia d", "qtd_vendida": 143.0, "valor_venda": 4275.7, "custo_unitario": 3.36691398601399, "preco_medio": 29.9, "participacao": 0.5308988415262551, "margem": 26.533086013986008, "cmv": 0.11260581893023378}, {"categoria": "DELIVERY", "produto": "STROGONOFF DE FRANGO D", "qtd_vendida": 68.0, "valor_venda": 2103.2, "custo_unitario": 8.14920294117647, "preco_medio": 30.92941176470588, "participacao": 0.2611470504240287, "margem": 22.780208823529406, "cmv": 0.2634774629136554}, {"categoria": "DELIVERY", "produto": "FEIJOADA DELIVERY", "qtd_vendida": 22.0, "valor_venda": 1540.0, "custo_unitario": 30.9862, "preco_medio": 70.0, "participacao": 0.19121645951550223, "margem": 39.0138, "cmv": 0.44266}, {"categoria": "DELIVERY", "produto": "BAIÃO DE 2 D", "qtd_vendida": 1.0, "valor_venda": 97.9, "custo_unitario": 25.3145, "preco_medio": 97.9, "participacao": 0.012155903497771212, "margem": 72.58550000000001, "cmv": 0.2585750766087844}, {"categoria": "DELIVERY", "produto": "PARMEGIANA D FRANGO EXECUTIV D", "qtd_vendida": 1.0, "valor_venda": 36.9, "custo_unitario": 7.4057, "preco_medio": 36.9, "participacao": 0.004581745036442877, "margem": 29.4943, "cmv": 0.20069647696476967}, {"categoria": "DOSES", "produto": "CAMPARI", "qtd_vendida": 40.0, "valor_venda": 916.0, "custo_unitario": 5.566635, "preco_medio": 22.9, "participacao": 0.14513880086195974, "margem": 17.333365, "cmv": 0.2430844978165939}, {"categoria": "DOSES", "produto": "GABRIELA (DOSE)", "qtd_vendida": 45.0, "valor_venda": 715.5, "custo_unitario": 1.08, "preco_medio": 15.9, "participacao": 0.11336988211433645, "margem": 14.82, "cmv": 0.06792452830188679}, {"categoria": "DOSES", "produto": "WHISKY JACK DANIELS (DOSE)", "qtd_vendida": 26.0, "valor_venda": 959.4, "custo_unitario": 12.8943461538462, "preco_medio": 36.9, "participacao": 0.15201546457092158, "margem": 24.0056538461538, "cmv": 0.3494402751719838}, {"categoria": "DOSES", "produto": "BLACK LABEL (DOSE)", "qtd_vendida": 16.0, "valor_venda": 638.4, "custo_unitario": 16.29, "preco_medio": 43.9, "participacao": 0.10115350488021298, "margem": 27.61, "cmv": 0.37107061503416855}, {"categoria": "DOSES", "produto": "RED LABEL (DOSE)", "qtd_vendida": 18.0, "valor_venda": 520.2, "custo_unitario": 7.9905, "preco_medio": 28.900000000000002, "participacao": 0.08242489542400815, "margem": 20.9095, "cmv": 0.2764878892733564}, {"categoria": "DOSES", "produto": "SELETA (DOSE)", "qtd_vendida": 18.0, "valor_venda": 394.2, "custo_unitario": 3.30663333333333, "preco_medio": 21.9, "participacao": 0.062460387881860834, "margem": 18.593366666666668, "cmv": 0.1509878234398781}, {"categoria": "DOSES", "produto": "LICOR 43 (DOSE)", "qtd_vendida": 15.0, "valor_venda": 448.5, "custo_unitario": 11.992, "preco_medio": 34.9, "participacao": 0.07106413994169099, "margem": 22.907999999999998, "cmv": 0.34361031518624646}, {"categoria": "DOSES", "produto": "JACK HONEY (DOSE)", "qtd_vendida": 10.0, "valor_venda": 339.0, "custo_unitario": 14.759, "preco_medio": 39.9, "participacao": 0.05371403219672964, "margem": 25.141, "cmv": 0.3698997493734336}, {"categoria": "DOSES", "produto": "VODKA ABSOLUT (DOSE)", "qtd_vendida": 10.0, "valor_venda": 259.0, "custo_unitario": 7.222, "preco_medio": 25.9, "participacao": 0.041038154392191675, "margem": 18.677999999999997, "cmv": 0.27884169884169885}, {"categoria": "DOSES", "produto": "VODKA SMIRNOFF (DOSE)", "qtd_vendida": 8.0, "valor_venda": 167.2, "custo_unitario": 3.008025, "preco_medio": 20.9, "participacao": 0.026492584611484352, "margem": 17.891975, "cmv": 0.14392464114832537}, {"categoria": "DOSES", "produto": "TEQUILA OURO (DOSE)", "qtd_vendida": 8.0, "valor_venda": 199.2, "custo_unitario": 8.552, "preco_medio": 25.9, "participacao": 0.03156293573329954, "margem": 17.348, "cmv": 0.3301930501930502}, {"categoria": "DOSES", "produto": "TEQUILA PRATA (DOSE)", "qtd_vendida": 7.0, "valor_venda": 181.3, "custo_unitario": 8.70057142857143, "preco_medio": 25.900000000000002, "participacao": 0.028726708074534174, "margem": 17.19942857142857, "cmv": 0.3359293987865417}, {"categoria": "DOSES", "produto": "KARIRI COM MEL", "qtd_vendida": 13.0, "valor_venda": 141.7, "custo_unitario": 1.73821538461538, "preco_medio": 10.899999999999999, "participacao": 0.022452148561287875, "margem": 9.161784615384619, "cmv": 0.15946930134086057}, {"categoria": "DOSES", "produto": "BUSCA VIDA (DOSE)", "qtd_vendida": 8.0, "valor_venda": 151.2, "custo_unitario": 6.52835, "preco_medio": 18.9, "participacao": 0.023957409050576757, "margem": 12.371649999999999, "cmv": 0.3454153439153439}, {"categoria": "DOSES", "produto": "BEEFEATER (DOSE)", "qtd_vendida": 5.0, "valor_venda": 114.5, "custo_unitario": 5.73606, "preco_medio": 22.9, "participacao": 0.018142350107744967, "margem": 17.163939999999997, "cmv": 0.2504829694323144}, {"categoria": "DOSES", "produto": "CHIVAS 12Y (DOSE)", "qtd_vendida": 2.0, "valor_venda": 69.8, "custo_unitario": 11.169, "preco_medio": 34.9, "participacao": 0.011059703384459376, "margem": 23.730999999999998, "cmv": 0.320028653295129}, {"categoria": "DOSES", "produto": "BALLATINES (DOSE)", "qtd_vendida": 1.0, "valor_venda": 26.9, "custo_unitario": 2.654, "preco_medio": 26.9, "participacao": 0.004262263911775891, "margem": 24.246, "cmv": 0.09866171003717472}, {"categoria": "DOSES", "produto": "TANQUERAY (DOSE)", "qtd_vendida": 1.0, "valor_venda": 26.9, "custo_unitario": 7.7144, "preco_medio": 26.9, "participacao": 0.004262263911775891, "margem": 19.185599999999997, "cmv": 0.28678066914498146}, {"categoria": "DOSES", "produto": "APEROL (DOSE)", "qtd_vendida": 1.0, "valor_venda": 18.9, "custo_unitario": 4.8467, "preco_medio": 18.9, "participacao": 0.0029946761313220946, "margem": 14.053299999999998, "cmv": 0.25643915343915347}, {"categoria": "DOSES", "produto": "GROSELHA (DOSE)", "qtd_vendida": 3.0, "valor_venda": 13.5, "custo_unitario": 0.99, "preco_medio": 4.5, "participacao": 0.002139054379515782, "margem": 3.51, "cmv": 0.22}, {"categoria": "DOSES", "produto": "VELHO BARREIRO (DOSE)", "qtd_vendida": 1.0, "valor_venda": 9.9, "custo_unitario": 0.9945, "preco_medio": 9.9, "participacao": 0.0015686398783115736, "margem": 8.9055, "cmv": 0.10045454545454545}, {"categoria": "CAIPIRINHA", "produto": "MARIA BONITA", "qtd_vendida": 160.0, "valor_venda": 4784.0, "custo_unitario": 6.09786875, "preco_medio": 29.9, "participacao": 0.12943828007261968, "margem": 23.80213125, "cmv": 0.20394209866220736}, {"categoria": "CAIPIRINHA", "produto": "APEROL SPRITZ", "qtd_vendida": 123.0, "valor_venda": 4538.7, "custo_unitario": 12.3, "preco_medio": 36.9, "participacao": 0.12280132143929742, "margem": 24.599999999999998, "cmv": 0.33333333333333337}, {"categoria": "CAIPIRINHA", "produto": "TARDEZINHA", "qtd_vendida": 104.0, "valor_venda": 4045.6, "custo_unitario": 8.88, "preco_medio": 38.9, "participacao": 0.1094597629309762, "margem": 30.019999999999996, "cmv": 0.22827763496143963}, {"categoria": "CAIPIRINHA", "produto": "GIN MELANCITA", "qtd_vendida": 46.0, "valor_venda": 2295.4, "custo_unitario": 14.5, "preco_medio": 49.9, "participacao": 0.062105482457920407, "margem": 35.4, "cmv": 0.2905811623246493}, {"categoria": "CAIPIRINHA", "produto": "CLERICOT 1LT", "qtd_vendida": 29.0, "valor_venda": 2607.1, "custo_unitario": 30.4, "preco_medio": 89.89999999999999, "participacao": 0.07053899247017699, "margem": 59.49999999999999, "cmv": 0.3381535038932147}, {"categoria": "CAIPIRINHA", "produto": "MOSCOW MULE", "qtd_vendida": 52.0, "valor_venda": 1814.8, "custo_unitario": 5.80277115384615, "preco_medio": 34.9, "participacao": 0.0491021301579829, "margem": 29.097228846153847, "cmv": 0.16626851443685245}, {"categoria": "CAIPIRINHA", "produto": "ESPANHOLA", "qtd_vendida": 55.0, "valor_venda": 2029.5, "custo_unitario": 10.2105909090909, "preco_medio": 36.9, "participacao": 0.05491115999318178, "margem": 26.6894090909091, "cmv": 0.27670978073417074}, {"categoria": "CAIPIRINHA", "produto": "GIN TROPICAL BEEFEATER", "qtd_vendida": 42.0, "valor_venda": 2095.8, "custo_unitario": 14.6, "preco_medio": 49.900000000000006, "participacao": 0.05670500572244907, "margem": 35.300000000000004, "cmv": 0.2925851703406813}, {"categoria": "CAIPIRINHA", "produto": "SEX ON THE BEACH", "qtd_vendida": 47.0, "valor_venda": 1530.3, "custo_unitario": 6.79497234042553, "preco_medio": 32.5595744680851, "participacao": 0.04140455685516929, "margem": 25.764602127659572, "cmv": 0.20869352414559234}, {"categoria": "CAIPIRINHA", "produto": "PINA COLADA", "qtd_vendida": 44.0, "valor_venda": 1623.6, "custo_unitario": 9.66327954545454, "preco_medio": 36.9, "participacao": 0.04392892799454542, "margem": 27.23672045454546, "cmv": 0.2618774944567626}, {"categoria": "CAIPIRINHA", "produto": "MOJITO", "qtd_vendida": 42.0, "valor_venda": 1381.8, "custo_unitario": 5.52419047619048, "preco_medio": 32.9, "participacao": 0.03738666709957062, "margem": 27.37580952380952, "cmv": 0.16790852511217264}, {"categoria": "CAIPIRINHA", "produto": "JORGE AMADO", "qtd_vendida": 64.0, "valor_venda": 2105.6, "custo_unitario": 6.95, "preco_medio": 32.9, "participacao": 0.0569701593898219, "margem": 25.95, "cmv": 0.21124620060790275}, {"categoria": "CAIPIRINHA", "produto": "GIN PINK", "qtd_vendida": 33.0, "valor_venda": 1481.7, "custo_unitario": 14.9, "preco_medio": 44.9, "participacao": 0.040089611116973366, "margem": 30.0, "cmv": 0.3318485523385301}, {"categoria": "CAIPIRINHA", "produto": "ECLIPSE", "qtd_vendida": 43.0, "valor_venda": 1113.7, "custo_unitario": 4.9797488372093, "preco_medio": 25.900000000000002, "participacao": 0.030132820342156467, "margem": 20.920251162790702, "cmv": 0.19226829487294592}, {"categoria": "CAIPIRINHA", "produto": "CAJU FINEST", "qtd_vendida": 26.0, "valor_venda": 1011.4, "custo_unitario": 8.24800384615385, "preco_medio": 38.9, "participacao": 0.02736494073274405, "margem": 30.65199615384615, "cmv": 0.21203094720189847}, {"categoria": "CAIPIRINHA", "produto": "MARACUJACK", "qtd_vendida": 16.0, "valor_venda": 798.4, "custo_unitario": 15.56, "preco_medio": 49.9, "participacao": 0.021601906941885355, "margem": 34.339999999999996, "cmv": 0.3118236472945892}, {"categoria": "CAIPIRINHA", "produto": "BANHEIRINHA DA PRAIA", "qtd_vendida": 8.0, "valor_venda": 375.2, "custo_unitario": 11.62165, "preco_medio": 46.9, "participacao": 0.010151597550845924, "margem": 35.278349999999996, "cmv": 0.24779637526652454}, {"categoria": "CAIPIRINHA", "produto": "SANGRIA 1LT", "qtd_vendida": 4.0, "valor_venda": 339.6, "custo_unitario": 24.31, "preco_medio": 84.9, "participacao": 0.009188386269369072, "margem": 60.59, "cmv": 0.2863368669022379}, {"categoria": "CAIPIRINHA", "produto": "NEGRONI", "qtd_vendida": 9.0, "valor_venda": 314.1, "custo_unitario": 7.939, "preco_medio": 34.900000000000006, "participacao": 0.008498445604266271, "margem": 26.961000000000006, "cmv": 0.22747851002865327}, {"categoria": "CAIPIRINHA", "produto": "DELICIA DA PRAIA SEM ALCOOL", "qtd_vendida": 26.0, "valor_venda": 673.4, "custo_unitario": 4.29839230769231, "preco_medio": 25.9, "participacao": 0.018219844858048093, "margem": 21.601607692307688, "cmv": 0.16596109296109304}, {"categoria": "ENTRADAS", "produto": "CEVICHE", "qtd_vendida": 46.0, "valor_venda": 1835.4, "custo_unitario": 8.38208043478261, "preco_medio": 39.9, "participacao": 0.2761162594776748, "margem": 31.51791956521739, "cmv": 0.21007720387926343}, {"categoria": "ENTRADAS", "produto": "SALADA DA PRAIA", "qtd_vendida": 35.0, "valor_venda": 1361.5, "custo_unitario": 13.71, "preco_medio": 38.9, "participacao": 0.2048230834035383, "margem": 25.189999999999998, "cmv": 0.35244215938303347}, {"categoria": "ENTRADAS", "produto": "SALADA SOFT", "qtd_vendida": 21.0, "valor_venda": 417.9, "custo_unitario": 4.38174761904762, "preco_medio": 19.9, "participacao": 0.06286857624262847, "margem": 15.51825238095238, "cmv": 0.22018832256520707}, {"categoria": "ENTRADAS", "produto": "DADINHO DE TAPIOCA", "qtd_vendida": 76.0, "valor_venda": 3032.4, "custo_unitario": 7.17323815789474, "preco_medio": 39.9, "participacao": 0.45619208087615837, "margem": 32.72676184210526, "cmv": 0.17978040495976794}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO CARNE", "qtd_vendida": 1765.0, "valor_venda": 13823.2, "custo_unitario": 3.89845280453258, "preco_medio": 13.9, "participacao": 0.3929992949257398, "margem": 10.00154719546742, "cmv": 0.2804642305419122}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO QUEIJO COALHO", "qtd_vendida": 223.0, "valor_venda": 3159.7, "custo_unitario": 2.5, "preco_medio": 13.9, "participacao": 0.0898315782291264, "margem": 11.4, "cmv": 0.17985611510791366}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO CORACAO", "qtd_vendida": 223.0, "valor_venda": 3373.7, "custo_unitario": 4.3117, "preco_medio": 14.9, "participacao": 0.09591568676507381, "margem": 10.5883, "cmv": 0.2893758389261745}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO FRANGO", "qtd_vendida": 385.0, "valor_venda": 3250.5, "custo_unitario": 2.66, "preco_medio": 13.9, "participacao": 0.09241305979484614, "margem": 11.24, "cmv": 0.19136690647482016}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO LINGUIÇA", "qtd_vendida": 390.0, "valor_venda": 2934.6, "custo_unitario": 2.4349, "preco_medio": 13.9, "participacao": 0.08343189210089386, "margem": 11.4651, "cmv": 0.1751726618705036}, {"categoria": "ESPETINHOS", "produto": "PÃO DE ALHO", "qtd_vendida": 156.0, "valor_venda": 2240.4, "custo_unitario": 2.3324, "preco_medio": 13.9, "participacao": 0.06369549889689995, "margem": 11.5676, "cmv": 0.1677985611510791}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO KAFTA", "qtd_vendida": 330.0, "valor_venda": 2594.9, "custo_unitario": 3.0427, "preco_medio": 14.9, "participacao": 0.07377408056042033, "margem": 11.8573, "cmv": 0.20420805369127515}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO MEDALHAO BOVINO", "qtd_vendida": 52.0, "valor_venda": 972.8, "custo_unitario": 6.98276923076923, "preco_medio": 19.9, "participacao": 0.027657106466213298, "margem": 12.91723076923077, "cmv": 0.35089292616930806}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO MEDALHAO FRANGO", "qtd_vendida": 44.0, "valor_venda": 817.6, "custo_unitario": 5.774, "preco_medio": 19.9, "participacao": 0.023244706256965453, "margem": 14.125999999999998, "cmv": 0.29015075376884425}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO PLUINGUICA CALABRESA APIMENTADA", "qtd_vendida": 50.0, "valor_venda": 695.0, "custo_unitario": 2.6682, "preco_medio": 13.9, "participacao": 0.01975913753496941, "margem": 11.2318, "cmv": 0.1919568345323741}, {"categoria": "ESPETINHOS", "produto": "ESPETINHO QJO MUSSARELA", "qtd_vendida": 50.0, "valor_venda": 745.0, "custo_unitario": 4.284, "preco_medio": 14.9, "participacao": 0.021180658220938432, "margem": 10.616, "cmv": 0.2875167785234899}, {"categoria": "ESPETINHOS", "produto": "ESPETIHNO LINGUICA CUIABANA", "qtd_vendida": 38.0, "valor_venda": 566.2, "custo_unitario": 4.6694, "preco_medio": 14.9, "participacao": 0.01609730024791321, "margem": 10.230599999999999, "cmv": 0.3133825503355705}, {"categoria": "FRUTAS ADICIONAIS PARA SUCOS E CAIPIRINHAS", "produto": "MORANGO", "qtd_vendida": 56.0, "valor_venda": 274.4, "custo_unitario": 2.365, "preco_medio": 5.9, "participacao": 0.47294036539124434, "margem": 3.535, "cmv": 0.40084745762711865}, {"categoria": "FRUTAS ADICIONAIS PARA SUCOS E CAIPIRINHAS", "produto": "FRUTAS VERMELHAS", "qtd_vendida": 25.0, "valor_venda": 124.5, "custo_unitario": 3.6896, "preco_medio": 5.9, "participacao": 0.21458117890382625, "margem": 2.2104000000000004, "cmv": 0.6253559322033898}, {"categoria": "FRUTAS ADICIONAIS PARA SUCOS E CAIPIRINHAS", "produto": "ACEROLA", "qtd_vendida": 10.0, "valor_venda": 49.0, "custo_unitario": 2.164, "preco_medio": 5.9, "participacao": 0.08445363667700792, "margem": 3.736, "cmv": 0.36677966101694914}, {"categoria": "FRUTAS ADICIONAIS PARA SUCOS E CAIPIRINHAS", "produto": "ABACAXI", "qtd_vendida": 4.0, "valor_venda": 19.6, "custo_unitario": 2.14, "preco_medio": 5.9, "participacao": 0.03378145467080317, "margem": 3.7600000000000002, "cmv": 0.36271186440677966}, {"categoria": "FRUTAS ADICIONAIS PARA SUCOS E CAIPIRINHAS", "produto": "CAJU", "qtd_vendida": 9.0, "valor_venda": 44.1, "custo_unitario": 3.65, "preco_medio": 5.9, "participacao": 0.07600827300930713, "margem": 2.2500000000000004, "cmv": 0.6186440677966101}, {"categoria": "FRUTAS ADICIONAIS PARA SUCOS E CAIPIRINHAS", "produto": "MARACUJA", "qtd_vendida": 14.0, "valor_venda": 68.6, "custo_unitario": 4.78, "preco_medio": 5.9, "participacao": 0.11823509134781109, "margem": 1.12, "cmv": 0.8101694915254237}, {"categoria": "GARRAFAS", "produto": "GARRAFA VODKA SMIRNOFF", "qtd_vendida": 6.0, "valor_venda": 1250.0, "custo_unitario": 68.04, "preco_medio": 230.0, "participacao": 0.1936243378047647, "margem": 161.95999999999998, "cmv": 0.29582608695652174}, {"categoria": "GARRAFAS", "produto": "GARRAFA BEEFEATER", "qtd_vendida": 4.0, "valor_venda": 1280.0, "custo_unitario": 147.65, "preco_medio": 420.0, "participacao": 0.19827132191207905, "margem": 272.35, "cmv": 0.35154761904761905}, {"categoria": "GARRAFAS", "produto": "GARRAFA JACK DANIELS", "qtd_vendida": 2.0, "valor_venda": 780.0, "custo_unitario": 172.74, "preco_medio": 490.0, "participacao": 0.12082158679017317, "margem": 317.26, "cmv": 0.35253061224489796}, {"categoria": "GARRAFAS", "produto": "GARRAFA BLACK LABEL", "qtd_vendida": 2.0, "valor_venda": 780.0, "custo_unitario": 208.65, "preco_medio": 520.0, "participacao": 0.12082158679017317, "margem": 311.35, "cmv": 0.40125}, {"categoria": "GARRAFAS", "produto": "GARRAFA CHIVAS", "qtd_vendida": 1.0, "valor_venda": 370.0, "custo_unitario": 157.44, "preco_medio": 450.0, "participacao": 0.057312803990210354, "margem": 292.56, "cmv": 0.34986666666666666}, {"categoria": "GARRAFAS", "produto": "GARRAFA MOSCATEL", "qtd_vendida": 5.0, "valor_venda": 449.5, "custo_unitario": 40.04, "preco_medio": 89.9, "participacao": 0.06962731187459338, "margem": 49.86000000000001, "cmv": 0.4453837597330367}, {"categoria": "GARRAFAS", "produto": "GARRAFA VINHO SAUVIGNON BLANC", "qtd_vendida": 4.0, "valor_venda": 359.6, "custo_unitario": 29.4867, "preco_medio": 89.9, "participacao": 0.055701849499674716, "margem": 60.41330000000001, "cmv": 0.32799443826473856}, {"categoria": "GARRAFAS", "produto": "GARRAFA ABSOLUT", "qtd_vendida": 1.0, "valor_venda": 300.0, "custo_unitario": 107.65, "preco_medio": 360.0, "participacao": 0.04646984107314353, "margem": 252.35, "cmv": 0.2990277777777778}, {"categoria": "GARRAFAS", "produto": "GARRAFA RED LABEL", "qtd_vendida": 1.0, "valor_venda": 290.0, "custo_unitario": 125.655, "preco_medio": 420.0, "participacao": 0.04492084637070541, "margem": 294.345, "cmv": 0.2991785714285714}, {"categoria": "GARRAFAS", "produto": "GARRAFA BRUT PROSECCO SALTON", "qtd_vendida": 3.0, "valor_venda": 267.0, "custo_unitario": 32.0893, "preco_medio": 89.0, "participacao": 0.04135815855509774, "margem": 56.9107, "cmv": 0.36055393258426965}, {"categoria": "GARRAFAS", "produto": "VINHO ROSE CHILENO", "qtd_vendida": 2.0, "valor_venda": 179.8, "custo_unitario": 28.87, "preco_medio": 89.9, "participacao": 0.027850924749837358, "margem": 61.03, "cmv": 0.3211345939933259}, {"categoria": "GARRAFAS", "produto": "GARRAFA SANTO MEL", "qtd_vendida": 1.0, "valor_venda": 149.9, "custo_unitario": 54.8571, "preco_medio": 149.9, "participacao": 0.023219430589547382, "margem": 95.0429, "cmv": 0.3659579719813209}, {"categoria": "GIN", "produto": "BEEFEATER TONICA LIMÃO", "qtd_vendida": 43.0, "valor_venda": 1457.7, "custo_unitario": 10.3031, "preco_medio": 33.9, "participacao": 1.0, "margem": 23.596899999999998, "cmv": 0.3039262536873157}, {"categoria": "LANCHES", "produto": "CHEDDAR BACON", "qtd_vendida": 88.0, "valor_venda": 3951.2, "custo_unitario": 12.87, "preco_medio": 44.9, "participacao": 0.245096458036102, "margem": 32.03, "cmv": 0.2866369710467706}, {"categoria": "LANCHES", "produto": "SHARK BURGER", "qtd_vendida": 78.0, "valor_venda": 3502.2, "custo_unitario": 14.1097897435897, "preco_medio": 44.9, "participacao": 0.21724458780472677, "margem": 30.790210256410298, "cmv": 0.31424921477928064}, {"categoria": "LANCHES", "produto": "CHICKEN BEACH", "qtd_vendida": 68.0, "valor_venda": 2849.2, "custo_unitario": 6.68382058823529, "preco_medio": 41.9, "participacao": 0.17673841573103408, "margem": 35.216179411764706, "cmv": 0.15951839112733388}, {"categoria": "LANCHES", "produto": "PRAIA LANCHE FELIZ", "qtd_vendida": 72.0, "valor_venda": 2944.8, "custo_unitario": 9.12427222222222, "preco_medio": 40.900000000000006, "participacao": 0.1826685689473358, "margem": 31.775727777777785, "cmv": 0.22308734039663128}, {"categoria": "LANCHES", "produto": "KILAMANJARO", "qtd_vendida": 64.0, "valor_venda": 2873.6, "custo_unitario": 15.99, "preco_medio": 44.9, "participacao": 0.17825196948080146, "margem": 28.909999999999997, "cmv": 0.3561247216035635}, {"categoria": "PORÇÕES", "produto": "CHAPA MISTA", "qtd_vendida": 143.0, "valor_venda": 13896.22, "custo_unitario": 29.7231384615385, "preco_medio": 97.17636363636363, "participacao": 0.19077831542778498, "margem": 67.45322517482514, "cmv": 0.3058679842431975}, {"categoria": "PORÇÕES", "produto": "BATATA PALITO", "qtd_vendida": 354.0, "valor_venda": 11342.5, "custo_unitario": 9.6894615819209, "preco_medio": 32.0409604519774, "participacao": 0.15571882445295562, "margem": 22.351498870056496, "cmv": 0.3024085871721401}, {"categoria": "PORÇÕES", "produto": "BATATA PALITO C/ QUEIJO E BACO", "qtd_vendida": 175.0, "valor_venda": 9607.5, "custo_unitario": 24.28, "preco_medio": 59.9, "participacao": 0.13189937015047576, "margem": 35.62, "cmv": 0.40534223706176964}, {"categoria": "PORÇÕES", "produto": "ISCA DE FRANGO EMPANADO", "qtd_vendida": 197.0, "valor_venda": 7656.8, "custo_unitario": 13.59, "preco_medio": 49.9, "participacao": 0.10511861539090947, "margem": 36.31, "cmv": 0.2723446893787575}, {"categoria": "PORÇÕES", "produto": "ISCA DE PEIXE", "qtd_vendida": 62.0, "valor_venda": 5583.8, "custo_unitario": 20.8532451612903, "preco_medio": 90.06129032258065, "participacao": 0.0766588293568802, "margem": 69.20804516129034, "cmv": 0.23154504101149728}, {"categoria": "PORÇÕES", "produto": "PORCAO DE TORRESMO", "qtd_vendida": 67.0, "valor_venda": 4348.3, "custo_unitario": 16.3918388059701, "preco_medio": 64.9, "participacao": 0.059696906710935596, "margem": 48.50816119402991, "cmv": 0.2525707057930678}, {"categoria": "PORÇÕES", "produto": "FRANGO A PREMIUM", "qtd_vendida": 121.0, "valor_venda": 5190.9, "custo_unitario": 14.15, "preco_medio": 45.9, "participacao": 0.07126478693875665, "margem": 31.75, "cmv": 0.30827886710239655}, {"categoria": "PORÇÕES", "produto": "PASTEL MISTO 8UNID", "qtd_vendida": 74.0, "valor_venda": 4096.8, "custo_unitario": 15.8239256756757, "preco_medio": 55.362162162162164, "participacao": 0.0562441154964839, "margem": 39.53823648648647, "cmv": 0.28582564440539}, {"categoria": "PORÇÕES", "produto": "MANDIOCA FRITA", "qtd_vendida": 91.0, "valor_venda": 2720.9, "custo_unitario": 3.43063956043956, "preco_medio": 29.900000000000002, "participacao": 0.03735467043897262, "margem": 26.469360439560443, "cmv": 0.11473710904480132}, {"categoria": "PORÇÕES", "produto": "CHAPA CHURRASCO COM ALIGOT", "qtd_vendida": 23.0, "valor_venda": 2872.7, "custo_unitario": 39.1484, "preco_medio": 129.9, "participacao": 0.0394387010805383, "margem": 90.7516, "cmv": 0.301373364126251}, {"categoria": "PORÇÕES", "produto": "F MILANESA AO CATUPIRY PORÇÃO", "qtd_vendida": 21.0, "valor_venda": 2327.9, "custo_unitario": 33.6943857142857, "preco_medio": 110.85238095238095, "participacao": 0.03195925514163857, "margem": 77.15799523809525, "cmv": 0.30395725761415854}, {"categoria": "PORÇÕES", "produto": "CALABRESA ACEBOLADA", "qtd_vendida": 68.0, "valor_venda": 2347.1, "custo_unitario": 15.07, "preco_medio": 47.9, "participacao": 0.032222847950057934, "margem": 32.83, "cmv": 0.3146137787056368}, {"categoria": "PORÇÕES", "produto": "PASTEL QUEIJO 8 UNID", "qtd_vendida": 7.0, "valor_venda": 398.3, "custo_unitario": 16.0804285714286, "preco_medio": 56.9, "participacao": 0.00546817789549149, "margem": 40.81957142857139, "cmv": 0.28260858649259407}, {"categoria": "PORÇÕES", "produto": "PASTEL CARNE 8 UNID", "qtd_vendida": 7.0, "valor_venda": 398.3, "custo_unitario": 16.9362285714286, "preco_medio": 56.9, "participacao": 0.00546817789549149, "margem": 39.9637714285714, "cmv": 0.2976490082852127}, {"categoria": "PORÇÕES", "produto": "BATATA KIDS", "qtd_vendida": 4.0, "valor_venda": 51.6, "custo_unitario": 2.5397, "preco_medio": 12.9, "participacao": 0.0007084056726270673, "margem": 10.3603, "cmv": 0.19687596899224805}, {"categoria": "PRATO EXECUTIVO", "produto": "FAROFA", "qtd_vendida": 1.0, "valor_venda": 7.9, "custo_unitario": 2.4091, "preco_medio": 7.9, "participacao": 0.0001367560427994481, "margem": 5.4909, "cmv": 0.3049493670886076}, {"categoria": "PRATO EXECUTIVO", "produto": "CHURRASCO EXECUTIVO", "qtd_vendida": 656.0, "valor_venda": 22606.4, "custo_unitario": 2.73210243902439, "preco_medio": 34.4609756097561, "participacao": 0.3913369374609422, "margem": 31.728873170731706, "cmv": 0.07928105315308938}, {"categoria": "PRATO EXECUTIVO", "produto": "PARMEGIANA DE FRANGO EXECUTIVO", "qtd_vendida": 310.0, "valor_venda": 11933.0, "custo_unitario": 10.1349796774194, "preco_medio": 38.49354838709677, "participacao": 0.20657086819314102, "margem": 28.35856870967737, "cmv": 0.2632903460990542}, {"categoria": "PRATO EXECUTIVO", "produto": "PARMEGIANA DE CARNE EXECUTIVO", "qtd_vendida": 297.0, "valor_venda": 12389.3, "custo_unitario": 17.7478420875421, "preco_medio": 41.714814814814815, "participacao": 0.21446982798167116, "margem": 23.966972727272715, "cmv": 0.4254565713962858}, {"categoria": "PRATO EXECUTIVO", "produto": "FILE DE FRANGO GRELHADO", "qtd_vendida": 192.0, "valor_venda": 5548.8, "custo_unitario": 5.941246875, "preco_medio": 28.900000000000002, "participacao": 0.09605467471969337, "margem": 22.958753125, "cmv": 0.2055794766435986}, {"categoria": "PRATO EXECUTIVO", "produto": "PARMEGIANA DE PEIXE EXECUTIVO", "qtd_vendida": 67.0, "valor_venda": 2753.3, "custo_unitario": 17.2769253731343, "preco_medio": 41.094029850746274, "participacao": 0.0476620775493317, "margem": 23.817104477611974, "cmv": 0.4204242182108735}, {"categoria": "PRATO EXECUTIVO", "produto": "TILAPIA GRELHADA EXECUTIVO", "qtd_vendida": 38.0, "valor_venda": 1450.2, "custo_unitario": 9.08826578947368, "preco_medio": 38.16315789473684, "participacao": 0.025104254844020207, "margem": 29.07489210526316, "cmv": 0.23814239415253055}, {"categoria": "PRATO EXECUTIVO", "produto": "FILE DE FRANGO EXECUTIVO", "qtd_vendida": 16.0, "valor_venda": 414.4, "custo_unitario": 7.254975, "preco_medio": 25.9, "participacao": 0.0071736334349482645, "margem": 18.645024999999997, "cmv": 0.28011486486486487}, {"categoria": "PRATO EXECUTIVO", "produto": "STROGONOFF DE FRANGO", "qtd_vendida": 1.0, "valor_venda": 29.9, "custo_unitario": 0.0, "preco_medio": 29.9, "participacao": 0.0005175956556586706, "margem": 29.9, "cmv": 0.0}, {"categoria": "PRATO EXECUTIVO", "produto": "OMELETE", "qtd_vendida": 0.0, "valor_venda": 49.8, "custo_unitario": 0.0, "preco_medio": 0, "participacao": 0.000862082396381331, "margem": 0, "cmv": 0}, {"categoria": "PRATO EXECUTIVO", "produto": "Frango em cubos d", "qtd_vendida": 13.0, "valor_venda": 76.7, "custo_unitario": 5.32, "preco_medio": 5.9, "participacao": 0.0013277453775591987, "margem": 0.5800000000000001, "cmv": 0.9016949152542373}, {"categoria": "PRATO EXECUTIVO", "produto": "Ovos fritos d", "qtd_vendida": 3.0, "valor_venda": 0.0, "custo_unitario": 1.3528, "preco_medio": 0.0, "participacao": 0.0, "margem": -1.3528, "cmv": 0}, {"categoria": "PRATO EXECUTIVO", "produto": "SALADA EXECUTIVO", "qtd_vendida": 13.0, "valor_venda": 0.0, "custo_unitario": 0.666246153846154, "preco_medio": 0.0, "participacao": 0.0, "margem": -0.666246153846154, "cmv": 0}, {"categoria": "PRATO EXECUTIVO", "produto": "Calabresa acebolada d", "qtd_vendida": 41.0, "valor_venda": 0.0, "custo_unitario": 4.79437317073171, "preco_medio": 0.0, "participacao": 0.0, "margem": -4.79437317073171, "cmv": 0}, {"categoria": "PRATO EXECUTIVO", "produto": "Carne acebolada d", "qtd_vendida": 86.0, "valor_venda": 507.4, "custo_unitario": 8.2488023255814, "preco_medio": 5.8999999999999995, "participacao": 0.00878354634385316, "margem": -2.3488023255814, "cmv": 1.3981020890815932}, {"categoria": "REFEIÇOES", "produto": "TABUA NORDESTINA", "qtd_vendida": 77.0, "valor_venda": 10002.3, "custo_unitario": 46.62, "preco_medio": 139.9, "participacao": 0.2425725009803738, "margem": 93.28, "cmv": 0.3332380271622587}, {"categoria": "REFEIÇOES", "produto": "PARMEGIANA DE FRANGO", "qtd_vendida": 89.0, "valor_venda": 8398.25, "custo_unitario": 26.3191078651685, "preco_medio": 99.9, "participacao": 0.20367160616642416, "margem": 73.5808921348315, "cmv": 0.2634545331848699}, {"categoria": "REFEIÇOES", "produto": "PARMEGIANA DE CARNE", "qtd_vendida": 45.0, "valor_venda": 5760.5, "custo_unitario": 44.1790622222222, "preco_medio": 129.9, "participacao": 0.13970175778545368, "margem": 85.7209377777778, "cmv": 0.3401005559832348}, {"categoria": "REFEIÇOES", "produto": "BAIÃO DE 2", "qtd_vendida": 60.0, "valor_venda": 5174.72, "custo_unitario": 25.34782, "preco_medio": 86.24533333333333, "participacao": 0.12549561323627167, "margem": 60.897513333333336, "cmv": 0.29390367015026897}, {"categoria": "REFEIÇOES", "produto": "TILAPIA CAIÇARA", "qtd_vendida": 38.0, "valor_venda": 3656.2, "custo_unitario": 22.5394868421053, "preco_medio": 96.21578947368421, "participacao": 0.08866896394673653, "margem": 73.6763026315789, "cmv": 0.23425975056069182}, {"categoria": "REFEIÇOES", "produto": "PICANHA", "qtd_vendida": 39.0, "valor_venda": 4286.1, "custo_unitario": 47.9684846153846, "preco_medio": 149.9, "participacao": 0.10394509227397503, "margem": 101.93151538461541, "cmv": 0.32000323292451366}, {"categoria": "REFEIÇOES", "produto": "MARÉ ALTA", "qtd_vendida": 17.0, "valor_venda": 2038.3, "custo_unitario": 24.5938411764706, "preco_medio": 119.89999999999999, "participacao": 0.04943218347263089, "margem": 95.30615882352939, "cmv": 0.2051196094784871}, {"categoria": "REFEIÇOES", "produto": "TILAPIA KIDS", "qtd_vendida": 34.0, "valor_venda": 1118.6, "custo_unitario": 8.19469411764706, "preco_medio": 32.9, "participacao": 0.027127920537940886, "margem": 24.70530588235294, "cmv": 0.24907884856070092}, {"categoria": "REFEIÇOES", "produto": "PARMEGIANA DE PEIXE", "qtd_vendida": 7.0, "valor_venda": 799.3, "custo_unitario": 35.8693285714286, "preco_medio": 124.9, "participacao": 0.019384361600193235, "margem": 89.0306714285714, "cmv": 0.28718437607228664}, {"categoria": "RODÍZIO DE BOTECO", "produto": "CARNE KIDS", "qtd_vendida": 33.0, "valor_venda": 1151.7, "custo_unitario": 11.54, "preco_medio": 36.9, "participacao": 0.2712051994536806, "margem": 25.36, "cmv": 0.3127371273712737}, {"categoria": "RODÍZIO DE BOTECO", "produto": "TILAPIA KIDS", "qtd_vendida": 25.0, "valor_venda": 822.5, "custo_unitario": 7.70272, "preco_medio": 32.9, "participacao": 0.19368435925210756, "margem": 25.19728, "cmv": 0.23412522796352586}, {"categoria": "RODÍZIO DE BOTECO", "produto": "FRANGUINHO KIDS", "qtd_vendida": 76.0, "valor_venda": 2272.4, "custo_unitario": 6.71, "preco_medio": 29.900000000000002, "participacao": 0.5351104412942118, "margem": 23.19, "cmv": 0.22441471571906352}, {"categoria": "SOBREMESAS", "produto": "ACAI NA TIGELA", "qtd_vendida": 164.0, "valor_venda": 3435.6, "custo_unitario": 4.66921036585366, "preco_medio": 20.94878048780488, "participacao": 0.48111582573625167, "margem": 16.279570121951217, "cmv": 0.22288697752939812}, {"categoria": "SOBREMESAS", "produto": "PETIT GATEAU", "qtd_vendida": 86.0, "valor_venda": 2571.4, "custo_unitario": 7.84452906976744, "preco_medio": 29.900000000000002, "participacao": 0.3600946659384671, "margem": 22.055470930232563, "cmv": 0.2623588317647973}, {"categoria": "SOBREMESAS", "produto": "GATEAU NAPOLITANO", "qtd_vendida": 10.0, "valor_venda": 419.0, "custo_unitario": 10.53458, "preco_medio": 41.9, "participacao": 0.05867607724516517, "margem": 31.36542, "cmv": 0.2514219570405728}, {"categoria": "SOBREMESAS", "produto": "CARTOLA", "qtd_vendida": 9.0, "valor_venda": 314.1, "custo_unitario": 10.9967111111111, "preco_medio": 36.9, "participacao": 0.043986052178296854, "margem": 25.9032888888889, "cmv": 0.2980138512496233}, {"categoria": "SOBREMESAS", "produto": "SORVETE DE CREME 2 BOLAS", "qtd_vendida": 14.0, "valor_venda": 222.6, "custo_unitario": 1.7143, "preco_medio": 15.9, "participacao": 0.031172541276309706, "margem": 14.1857, "cmv": 0.10781761006289307}, {"categoria": "SOBREMESAS", "produto": "SORVETE DE CREME", "qtd_vendida": 18.0, "valor_venda": 178.2, "custo_unitario": 0.9143, "preco_medio": 9.899999999999999, "participacao": 0.024954837625509384, "margem": 8.985699999999998, "cmv": 0.09235353535353537}, {"categoria": "SOFT", "produto": "AGUA SEM GAS 500ML", "qtd_vendida": 2841.0, "valor_venda": 14434.8, "custo_unitario": 0.943415980288631, "preco_medio": 6.9, "participacao": 0.22263660298261606, "margem": 5.95658401971137, "cmv": 0.136726953665019}, {"categoria": "SOFT", "produto": "COCA COLA ZERO LATA 350ML", "qtd_vendida": 1427.0, "valor_venda": 12169.1, "custo_unitario": 3.57842403644008, "preco_medio": 9.9, "participacao": 0.18769134905615273, "margem": 6.321575963559921, "cmv": 0.3614569733777858}, {"categoria": "SOFT", "produto": "COCA COLA LATA 350ML", "qtd_vendida": 1271.0, "valor_venda": 11227.4, "custo_unitario": 3.39382022029898, "preco_medio": 9.9, "participacao": 0.17316694352031364, "margem": 6.506179779701021, "cmv": 0.3428101232625232}, {"categoria": "SOFT", "produto": "AGUA COM GAS", "qtd_vendida": 763.0, "valor_venda": 5482.6, "custo_unitario": 1.1667, "preco_medio": 7.9, "participacao": 0.08456143760304895, "margem": 6.7333, "cmv": 0.14768354430379746}, {"categoria": "SOFT", "produto": "ENERGETICO RED BULL", "qtd_vendida": 231.0, "valor_venda": 4210.8, "custo_unitario": 8.6672303030303, "preco_medio": 19.9, "participacao": 0.06494570121090695, "margem": 11.232769696969699, "cmv": 0.4355392112075528}, {"categoria": "SOFT", "produto": "GUARANA ANTARTICA LATA 350ML", "qtd_vendida": 265.0, "valor_venda": 2395.8, "custo_unitario": 3.0833, "preco_medio": 9.9, "participacao": 0.036951864482067755, "margem": 6.816700000000001, "cmv": 0.3114444444444444}, {"categoria": "SOFT", "produto": "GUARANA ANTARTICA ZERO 350ML", "qtd_vendida": 190.0, "valor_venda": 1811.7, "custo_unitario": 3.25, "preco_medio": 9.9, "participacao": 0.02794293884387768, "margem": 6.65, "cmv": 0.3282828282828283}, {"categoria": "SOFT", "produto": "SPRITE LATA 350ML", "qtd_vendida": 167.0, "valor_venda": 1564.2, "custo_unitario": 2.96522694610778, "preco_medio": 9.9, "participacao": 0.02412559747176324, "margem": 6.93477305389222, "cmv": 0.2995178733442202}, {"categoria": "SOFT", "produto": "SCHWEPPES CITRUS 350ML", "qtd_vendida": 185.0, "valor_venda": 1663.2, "custo_unitario": 3.49368594594595, "preco_medio": 9.9, "participacao": 0.02565253402060902, "margem": 6.40631405405405, "cmv": 0.3528975702975707}, {"categoria": "SOFT", "produto": "ISOTÔNICO", "qtd_vendida": 76.0, "valor_venda": 1056.4, "custo_unitario": 3.50578289473684, "preco_medio": 13.9, "participacao": 0.016293492628289663, "margem": 10.39421710526316, "cmv": 0.25221459674365754}, {"categoria": "SOFT", "produto": "GELO DE COCO", "qtd_vendida": 103.0, "valor_venda": 949.7, "custo_unitario": 1.59921650485437, "preco_medio": 8.9, "participacao": 0.014647794347866994, "margem": 7.30078349514563, "cmv": 0.17968724773644607}, {"categoria": "SOFT", "produto": "SODA ITALIANA MAÇA VERDE", "qtd_vendida": 69.0, "valor_venda": 908.9, "custo_unitario": 4.48666376811594, "preco_medio": 14.9, "participacao": 0.014018511406524492, "margem": 10.41333623188406, "cmv": 0.30111837369905636}, {"categoria": "SOFT", "produto": "AGUA DE COCO", "qtd_vendida": 65.0, "valor_venda": 953.6, "custo_unitario": 6.08127538461538, "preco_medio": 14.9, "participacao": 0.014707946393730615, "margem": 8.818724615384621, "cmv": 0.4081392875580792}, {"categoria": "SOFT", "produto": "TONICA", "qtd_vendida": 80.0, "valor_venda": 792.0, "custo_unitario": 3.093605, "preco_medio": 9.9, "participacao": 0.012215492390766199, "margem": 6.806395, "cmv": 0.31248535353535356}, {"categoria": "SOFT", "produto": "ENERGETICO RED BULL TROPICAL", "qtd_vendida": 53.0, "valor_venda": 926.0, "custo_unitario": 7.55, "preco_medio": 19.9, "participacao": 0.014282254992234218, "margem": 12.349999999999998, "cmv": 0.37939698492462315}, {"categoria": "SOFT", "produto": "SODA ITALIANA MORANGO", "qtd_vendida": 52.0, "valor_venda": 759.9, "custo_unitario": 4.57046923076923, "preco_medio": 14.9, "participacao": 0.011720394782504084, "margem": 10.329530769230772, "cmv": 0.30674290139390803}, {"categoria": "SOFT", "produto": "AGUA S/ GAS 1,5LT", "qtd_vendida": 59.0, "valor_venda": 643.1, "custo_unitario": 2.15520508474576, "preco_medio": 9.9, "participacao": 0.00991891812689614, "margem": 7.744794915254241, "cmv": 0.21769748330765248}, {"categoria": "SOFT", "produto": "FANTA LARANJA LATA 350ML", "qtd_vendida": 67.0, "valor_venda": 633.6, "custo_unitario": 2.91008507462687, "preco_medio": 9.9, "participacao": 0.00977239391261296, "margem": 6.98991492537313, "cmv": 0.2939479873360475}, {"categoria": "SOFT", "produto": "TUBAINA", "qtd_vendida": 52.0, "valor_venda": 495.0, "custo_unitario": 2.86762692307692, "preco_medio": 9.9, "participacao": 0.007634682744228874, "margem": 7.032373076923081, "cmv": 0.2896592851592848}, {"categoria": "SOFT", "produto": "FANTA UVA LATA 350ML", "qtd_vendida": 58.0, "valor_venda": 504.9, "custo_unitario": 2.86841896551724, "preco_medio": 9.9, "participacao": 0.007787376399113451, "margem": 7.031581034482761, "cmv": 0.2897392894461859}, {"categoria": "SOFT", "produto": "ENERGETICO RED BULL MELANCIA", "qtd_vendida": 44.0, "valor_venda": 647.9, "custo_unitario": 7.69090909090909, "preco_medio": 19.9, "participacao": 0.009992951414112904, "margem": 12.209090909090909, "cmv": 0.3864778437642759}, {"categoria": "SOFT", "produto": "SODA ITALIANA MELANCIA", "qtd_vendida": 24.0, "valor_venda": 357.6, "custo_unitario": 4.59029583333333, "preco_medio": 14.9, "participacao": 0.005515479897648981, "margem": 10.30970416666667, "cmv": 0.30807354586129726}, {"categoria": "SOFT", "produto": "TONICA ZERO", "qtd_vendida": 25.0, "valor_venda": 247.5, "custo_unitario": 2.954688, "preco_medio": 9.9, "participacao": 0.003817341372114437, "margem": 6.945312, "cmv": 0.29845333333333335}, {"categoria": "SORVETE", "produto": "PALETA DE COCO COM DOCE DE LEITE", "qtd_vendida": 19.0, "valor_venda": 340.1, "custo_unitario": 7.86174210526316, "preco_medio": 19.9, "participacao": 0.05378265544942755, "margem": 12.038257894736837, "cmv": 0.3950624173499076}, {"categoria": "SORVETE", "produto": "PALETA DE CHURROS", "qtd_vendida": 22.0, "valor_venda": 393.8, "custo_unitario": 7.9213, "preco_medio": 19.9, "participacao": 0.06227465367828453, "margem": 11.9787, "cmv": 0.3980552763819096}, {"categoria": "SORVETE", "produto": "PALETA LEITE TRUFADO", "qtd_vendida": 34.0, "valor_venda": 608.6, "custo_unitario": 8.2985, "preco_medio": 19.9, "participacao": 0.09624264659371246, "margem": 11.601499999999998, "cmv": 0.41701005025125637}, {"categoria": "SORVETE", "produto": "PALETA DE MORANGO COM LEITE CONDENSADO", "qtd_vendida": 62.0, "valor_venda": 1109.8, "custo_unitario": 8.2985, "preco_medio": 19.9, "participacao": 0.17550129672971093, "margem": 11.601499999999998, "cmv": 0.41701005025125637}, {"categoria": "SORVETE", "produto": "PALETA BRIGADEIRO", "qtd_vendida": 52.0, "valor_venda": 930.8, "custo_unitario": 8.2985, "preco_medio": 19.9, "participacao": 0.14719463596685434, "margem": 11.601499999999998, "cmv": 0.41701005025125637}, {"categoria": "SORVETE", "produto": "PALETA NAPOLITANO", "qtd_vendida": 25.0, "valor_venda": 447.5, "custo_unitario": 8.2988, "preco_medio": 19.9, "participacao": 0.07076665190714151, "margem": 11.601199999999999, "cmv": 0.41702512562814076}, {"categoria": "SORVETE", "produto": "TAPIOCA COM LEITE CONDENSADO", "qtd_vendida": 12.0, "valor_venda": 206.8, "custo_unitario": 8.2985, "preco_medio": 19.9, "participacao": 0.03270289075842875, "margem": 11.601499999999998, "cmv": 0.41701005025125637}, {"categoria": "SORVETE", "produto": "MINI PALETA PACOCA", "qtd_vendida": 6.0, "valor_venda": 77.4, "custo_unitario": 5.067, "preco_medio": 14.9, "participacao": 0.012239863368967046, "margem": 9.833, "cmv": 0.34006711409395973}, {"categoria": "SORVETE", "produto": "MINI PALETA BRIGADEIRO C CHOCOLIX", "qtd_vendida": 6.0, "valor_venda": 77.4, "custo_unitario": 5.2923, "preco_medio": 14.9, "participacao": 0.012239863368967046, "margem": 9.607700000000001, "cmv": 0.35518791946308725}, {"categoria": "SORVETE", "produto": "MINI PALETA MILHO C/ CHOCOLATE BRANCO", "qtd_vendida": 29.0, "valor_venda": 374.1, "custo_unitario": 5.5735, "preco_medio": 14.9, "participacao": 0.05915933961667406, "margem": 9.3265, "cmv": 0.37406040268456375}, {"categoria": "SORVETE", "produto": "MINI PALETA LEITE COM FLOCOS D", "qtd_vendida": 12.0, "valor_venda": 154.8, "custo_unitario": 5.5735, "preco_medio": 14.9, "participacao": 0.024479726737934093, "margem": 9.3265, "cmv": 0.37406040268456375}, {"categoria": "SORVETE", "produto": "MINI PALETA SALADA DE FRUTAS", "qtd_vendida": 11.0, "valor_venda": 141.9, "custo_unitario": 5.5735, "preco_medio": 14.9, "participacao": 0.022439749509772917, "margem": 9.3265, "cmv": 0.37406040268456375}, {"categoria": "SORVETE", "produto": "PICOLE DE MARACUJA", "qtd_vendida": 10.0, "valor_venda": 109.0, "custo_unitario": 3.6595, "preco_medio": 12.9, "participacao": 0.017237016889113797, "margem": 9.2405, "cmv": 0.28368217054263567}, {"categoria": "SORVETE", "produto": "PICOLE UVA", "qtd_vendida": 46.0, "valor_venda": 501.4, "custo_unitario": 4.031, "preco_medio": 12.9, "participacao": 0.07929027768992346, "margem": 8.869, "cmv": 0.31248062015503875}, {"categoria": "SORVETE", "produto": "PICOLE CHOCOLATE BELGA", "qtd_vendida": 43.0, "valor_venda": 468.7, "custo_unitario": 4.031, "preco_medio": 12.9, "participacao": 0.07411917262318933, "margem": 8.869, "cmv": 0.31248062015503875}, {"categoria": "SORVETE", "produto": "PICOLE LIMAO SICILIANO", "qtd_vendida": 25.0, "valor_venda": 272.5, "custo_unitario": 4.031, "preco_medio": 12.9, "participacao": 0.0430925422227845, "margem": 8.869, "cmv": 0.31248062015503875}, {"categoria": "SORVETE", "produto": "PICOLE DE COCO", "qtd_vendida": 10.0, "valor_venda": 109.0, "custo_unitario": 4.031, "preco_medio": 12.9, "participacao": 0.017237016889113797, "margem": 8.869, "cmv": 0.31248062015503875}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA LARANJA", "qtd_vendida": 156.0, "valor_venda": 3807.3, "custo_unitario": 8.12514038461538, "preco_medio": 24.40576923076923, "participacao": 0.16531555980113322, "margem": 16.280628846153853, "cmv": 0.33291884012292156}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA LARANJA", "qtd_vendida": 194.0, "valor_venda": 2973.3, "custo_unitario": 3.97208608247423, "preco_medio": 15.326288659793816, "participacao": 0.1291027116215453, "margem": 11.354202577319587, "cmv": 0.2591681633202168}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA LIMÃO", "qtd_vendida": 53.0, "valor_venda": 842.7, "custo_unitario": 0.757403773584906, "preco_medio": 15.9, "participacao": 0.03659060810664118, "margem": 15.142596226415094, "cmv": 0.04763545745817019}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA MORANGO", "qtd_vendida": 53.0, "valor_venda": 842.7, "custo_unitario": 2.18245283018868, "preco_medio": 15.9, "participacao": 0.03659060810664118, "margem": 13.71754716981132, "cmv": 0.13726118428859624}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA ABACAXI C/ HORTELA", "qtd_vendida": 48.0, "valor_venda": 811.2, "custo_unitario": 2.15041666666667, "preco_medio": 16.900000000000002, "participacao": 0.03522285664662077, "margem": 14.749583333333332, "cmv": 0.12724358974358993}, {"categoria": "SUCOS", "produto": "SUCO JARRA ABACAXI COM HORTELA", "qtd_vendida": 30.0, "valor_venda": 897.0, "custo_unitario": 4.28, "preco_medio": 29.9, "participacao": 0.038948351099628735, "margem": 25.619999999999997, "cmv": 0.14314381270903012}, {"categoria": "SUCOS", "produto": "SUCO TROPICAL BIFASICO JARRA", "qtd_vendida": 34.0, "valor_venda": 1016.6, "custo_unitario": 9.64228529411765, "preco_medio": 29.900000000000002, "participacao": 0.04414146457957924, "margem": 20.25771470588235, "cmv": 0.3224844579972458}, {"categoria": "SUCOS", "produto": "SUCO COPO ACAI COM LARANJA", "qtd_vendida": 53.0, "valor_venda": 948.7, "custo_unitario": 5.78027169811321, "preco_medio": 19.9, "participacao": 0.041193200321313024, "margem": 14.119728301886788, "cmv": 0.29046591447805076}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA MARACUJA", "qtd_vendida": 74.0, "valor_venda": 1160.7, "custo_unitario": 4.78, "preco_medio": 15.685135135135136, "participacao": 0.050398384750656715, "margem": 10.905135135135136, "cmv": 0.30474713534935816}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA MORANGO", "qtd_vendida": 23.0, "valor_venda": 633.8, "custo_unitario": 5.18, "preco_medio": 27.55652173913043, "participacao": 0.027520027789236, "margem": 22.376521739130432, "cmv": 0.1879772798990218}, {"categoria": "SUCOS", "produto": "SUCO JARRA LARANJA COM ACEROLA", "qtd_vendida": 20.0, "valor_venda": 598.0, "custo_unitario": 6.4995, "preco_medio": 29.9, "participacao": 0.02596556739975249, "margem": 23.400499999999997, "cmv": 0.21737458193979936}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA ABACAXI", "qtd_vendida": 20.0, "valor_venda": 558.0, "custo_unitario": 4.28, "preco_medio": 27.9, "participacao": 0.024228740148932924, "margem": 23.619999999999997, "cmv": 0.15340501792114697}, {"categoria": "SUCOS", "produto": "SUCO TROPICAL BIFASICO COPO", "qtd_vendida": 33.0, "valor_venda": 557.7, "custo_unitario": 4.06073636363636, "preco_medio": 16.900000000000002, "participacao": 0.02421571394455178, "margem": 12.839263636363643, "cmv": 0.24028025820333485}, {"categoria": "SUCOS", "produto": "SUCO COPO ACAI BASE LEITE", "qtd_vendida": 36.0, "valor_venda": 608.4, "custo_unitario": 5.19024166666667, "preco_medio": 16.9, "participacao": 0.026417142484965576, "margem": 11.70975833333333, "cmv": 0.3071148915187379}, {"categoria": "SUCOS", "produto": "SUCO JARRA LIMONADA SUIÇA", "qtd_vendida": 17.0, "valor_venda": 508.3, "custo_unitario": 5.42128823529412, "preco_medio": 29.900000000000002, "participacao": 0.02207073228978962, "margem": 24.47871176470588, "cmv": 0.1813139878024789}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA LIMÃO", "qtd_vendida": 15.0, "valor_venda": 418.5, "custo_unitario": 1.42937333333333, "preco_medio": 27.9, "participacao": 0.018171555111699694, "margem": 26.470626666666668, "cmv": 0.05123201911588997}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA ABACAXI", "qtd_vendida": 25.0, "valor_venda": 397.5, "custo_unitario": 2.148, "preco_medio": 15.9, "participacao": 0.017259720805019422, "margem": 13.752, "cmv": 0.1350943396226415}, {"categoria": "SUCOS", "produto": "SUCO COPO LIMONADA SUIÇA", "qtd_vendida": 20.0, "valor_venda": 338.0, "custo_unitario": 2.77289, "preco_medio": 16.9, "participacao": 0.014676190269425321, "margem": 14.127109999999998, "cmv": 0.16407633136094676}, {"categoria": "SUCOS", "produto": "SUCO JARRA ACAI COM LARANJA", "qtd_vendida": 13.0, "valor_venda": 440.7, "custo_unitario": 12.6509, "preco_medio": 35.9, "participacao": 0.019135494235904552, "margem": 23.2491, "cmv": 0.35239275766016714}, {"categoria": "SUCOS", "produto": "SUCO COPO ACAI BASE AGUA", "qtd_vendida": 23.0, "valor_venda": 365.7, "custo_unitario": 4.13695652173913, "preco_medio": 15.9, "participacao": 0.015878943140617868, "margem": 11.76304347826087, "cmv": 0.2601859447634673}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA ACEROLA", "qtd_vendida": 12.0, "valor_venda": 334.8, "custo_unitario": 6.4, "preco_medio": 27.900000000000002, "participacao": 0.014537244089359755, "margem": 21.5, "cmv": 0.22939068100358423}, {"categoria": "SUCOS", "produto": "SUCO COPO LEITE MORANGO", "qtd_vendida": 17.0, "valor_venda": 287.3, "custo_unitario": 3.30635882352941, "preco_medio": 16.900000000000002, "participacao": 0.012474761729011522, "margem": 13.593641176470593, "cmv": 0.19564253393665146}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA F. VERMELHAS", "qtd_vendida": 16.0, "valor_venda": 254.4, "custo_unitario": 3.584375, "preco_medio": 15.9, "participacao": 0.011046221315212431, "margem": 12.315625, "cmv": 0.22543238993710693}, {"categoria": "SUCOS", "produto": "SUCO JARRA ACAI BASE LEITE", "qtd_vendida": 8.0, "valor_venda": 263.2, "custo_unitario": 10.81, "preco_medio": 32.9, "participacao": 0.011428323310392735, "margem": 22.089999999999996, "cmv": 0.3285714285714286}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA F. VERMELHAS", "qtd_vendida": 9.0, "valor_venda": 251.1, "custo_unitario": 8.58, "preco_medio": 27.9, "participacao": 0.010902933067019817, "margem": 19.32, "cmv": 0.30752688172043013}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA LARANJA C/ ACERLA", "qtd_vendida": 10.0, "valor_venda": 169.0, "custo_unitario": 2.226, "preco_medio": 16.9, "participacao": 0.0073380951347126605, "margem": 14.674, "cmv": 0.13171597633136095}, {"categoria": "SUCOS", "produto": "SUCO JARRA LEITE MORANGO", "qtd_vendida": 6.0, "valor_venda": 179.4, "custo_unitario": 7.332, "preco_medio": 29.900000000000002, "participacao": 0.007789670219925747, "margem": 22.568, "cmv": 0.2452173913043478}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA ACEROLA", "qtd_vendida": 9.0, "valor_venda": 143.1, "custo_unitario": 2.12444444444444, "preco_medio": 15.899999999999999, "participacao": 0.006213499489806992, "margem": 13.77555555555556, "cmv": 0.13361285814115975}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA AMORA", "qtd_vendida": 10.0, "valor_venda": 143.1, "custo_unitario": 4.27, "preco_medio": 14.309999999999999, "participacao": 0.006213499489806992, "margem": 10.04, "cmv": 0.2983927323549965}, {"categoria": "SUCOS", "produto": "SUCO COPO AGUA CAJU", "qtd_vendida": 8.0, "valor_venda": 127.2, "custo_unitario": 3.725, "preco_medio": 15.9, "participacao": 0.0055231106576062155, "margem": 12.175, "cmv": 0.23427672955974843}, {"categoria": "SUCOS", "produto": "SUCO JARRA ACAI BASE AGUA", "qtd_vendida": 3.0, "valor_venda": 86.7, "custo_unitario": 8.56, "preco_medio": 28.900000000000002, "participacao": 0.003764573066151406, "margem": 20.340000000000003, "cmv": 0.29619377162629756}, {"categoria": "SUCOS", "produto": "SUCO JARRA LEITE MARACUJA", "qtd_vendida": 3.0, "valor_venda": 89.7, "custo_unitario": 11.71, "preco_medio": 29.900000000000002, "participacao": 0.0038948351099628736, "margem": 18.19, "cmv": 0.3916387959866221}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA CAJU", "qtd_vendida": 2.0, "valor_venda": 55.8, "custo_unitario": 7.29, "preco_medio": 27.9, "participacao": 0.0024228740148932925, "margem": 20.61, "cmv": 0.26129032258064516}, {"categoria": "SUCOS", "produto": "SUCO JARRA LEITE ABACAXI", "qtd_vendida": 1.0, "valor_venda": 29.9, "custo_unitario": 6.432, "preco_medio": 29.9, "participacao": 0.0012982783699876245, "margem": 23.467999999999996, "cmv": 0.21511705685618732}, {"categoria": "SUCOS", "produto": "SUCO JARRA LEITE ACEROLA", "qtd_vendida": 1.0, "valor_venda": 29.9, "custo_unitario": 6.42, "preco_medio": 29.9, "participacao": 0.0012982783699876245, "margem": 23.479999999999997, "cmv": 0.21471571906354517}, {"categoria": "SUCOS", "produto": "SUCO JARRA LEITE F. VERMELHAS", "qtd_vendida": 1.0, "valor_venda": 29.9, "custo_unitario": 10.73, "preco_medio": 29.9, "participacao": 0.0012982783699876245, "margem": 19.169999999999998, "cmv": 0.3588628762541806}, {"categoria": "SUCOS", "produto": "SUCO JARRA LEITE AMORA", "qtd_vendida": 1.0, "valor_venda": 29.9, "custo_unitario": 10.83, "preco_medio": 29.9, "participacao": 0.0012982783699876245, "margem": 19.07, "cmv": 0.3622073578595318}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA AMORA", "qtd_vendida": 1.0, "valor_venda": 27.9, "custo_unitario": 8.72, "preco_medio": 27.9, "participacao": 0.0012114370074466463, "margem": 19.18, "cmv": 0.31254480286738356}, {"categoria": "SUCOS", "produto": "SUCO JARRA AGUA MARACUJA", "qtd_vendida": 59.0, "valor_venda": 1638.2, "custo_unitario": 9.56, "preco_medio": 27.766101694915253, "participacao": 0.07113176005731527, "margem": 18.206101694915255, "cmv": 0.3443047246978391}, {"categoria": "SUCOS", "produto": "SUCO COPO LEITE MARACUJA", "qtd_vendida": 8.0, "valor_venda": 135.2, "custo_unitario": 5.85, "preco_medio": 16.9, "participacao": 0.005870476107770127, "margem": 11.049999999999999, "cmv": 0.34615384615384615}];
+
+// ─── UTILS ───────────────────────────────────────────────
+const PAL=['#fbbf24','#f87171','#34d399','#818cf8','#fb923c','#38bdf8','#a78bfa','#4ade80','#f472b6','#2dd4bf','#facc15','#c084fc','#86efac','#fca5a5','#93c5fd','#fde68a','#6ee7b7','#e879f9','#67e8f9','#fcd34d'];
+const R=(n,d=0)=>'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});
+const N=n=>n.toLocaleString('pt-BR',{minimumFractionDigits:0});
+const cc=v=>v>0.45?'#f87171':v>0.35?'#fbbf24':v>0.25?'#a78bfa':'#34d399';
+
+// Deep-clone so edits don't break source
+const DATA = JSON.parse(JSON.stringify(RAW_DATA));
+
+// Build categories
+const CATS={};
+DATA.forEach(d=>{
+  if(!CATS[d.categoria]) CATS[d.categoria]={cat:d.categoria,items:[]};
+  CATS[d.categoria].items.push(d);
+});
+function catStats(c){
+  const items=c.items;
+  const fat=items.reduce((s,p)=>s+p.valor_venda,0);
+  const qtd=items.reduce((s,p)=>s+p.qtd_vendida,0);
+  const cmvAvg=items.reduce((s,p)=>s+p.cmv,0)/items.length;
+  return{fat,qtd,cmvAvg,n:items.length};
+}
+const CAT_LIST=Object.values(CATS).sort((a,b)=>{
+  const sa=catStats(a),sb=catStats(b); return sb.fat-sa.fat;
+});
+const TOTAL_FAT=CAT_LIST.reduce((s,c)=>s+catStats(c).fat,0);
+
+// ─── TABS ────────────────────────────────────────────────
+function showTab(t,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('page-'+t).classList.add('active');
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────
+function buildDashboard(){
+  const cats=CAT_LIST;
+  const stats=cats.map(c=>catStats(c));
+  const labels=cats.map(c=>c.cat.length>17?c.cat.slice(0,17)+'…':c.cat);
+
+  new Chart(document.getElementById('cFat'),{
+    type:'bar',
+    data:{labels,datasets:[{
+      data:stats.map(s=>s.fat),
+      backgroundColor:cats.map((_,i)=>PAL[i%PAL.length]+'99'),
+      borderColor:cats.map((_,i)=>PAL[i%PAL.length]),
+      borderWidth:1.5,borderRadius:5
+    }]},
+    options:{indexAxis:'y',responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${R(ctx.raw,0)}`}}},
+      scales:{
+        x:{grid:{color:'#1e2235'},ticks:{color:'#8890b0',font:{family:'JetBrains Mono',size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}},
+        y:{grid:{display:false},ticks:{color:'#c8cde0',font:{family:'Inter',size:11},padding:4}}
+      }}
+  });
+
+  const top7=cats.slice(0,7),outros=cats.slice(7).reduce((s,c,i)=>s+stats[7+i].fat,0);
+  new Chart(document.getElementById('cPie'),{
+    type:'doughnut',
+    data:{
+      labels:[...top7.map(c=>c.cat),'Outros'],
+      datasets:[{
+        data:[...top7.map((c,i)=>stats[i].fat),outros],
+        backgroundColor:[...top7.map((_,i)=>PAL[i]+'dd'),'#2c3350'],
+        borderColor:'#161924',borderWidth:2,hoverBorderWidth:3
+      }]
+    },
+    options:{responsive:true,cutout:'60%',
+      plugins:{
+        legend:{position:'right',labels:{color:'#c8cde0',font:{family:'Inter',size:11},boxWidth:12,padding:10}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${R(ctx.raw,0)} (${(ctx.raw/TOTAL_FAT*100).toFixed(1)}%)`}}
+      }}
+  });
+
+  const sc=[...cats.map((c,i)=>({c,s:stats[i]}))].sort((a,b)=>b.s.cmvAvg-a.s.cmvAvg);
+  new Chart(document.getElementById('cCMV'),{
+    type:'bar',
+    data:{
+      labels:sc.map(x=>x.c.cat.length>16?x.c.cat.slice(0,16)+'…':x.c.cat),
+      datasets:[{
+        data:sc.map(x=>+(x.s.cmvAvg*100).toFixed(1)),
+        backgroundColor:sc.map(x=>cc(x.s.cmvAvg)+'99'),
+        borderColor:sc.map(x=>cc(x.s.cmvAvg)),
+        borderWidth:1.5,borderRadius:5
+      }]
+    },
+    options:{indexAxis:'y',responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` CMV: ${ctx.raw}%`}}},
+      scales:{
+        x:{grid:{color:'#1e2235'},min:0,max:60,ticks:{color:'#8890b0',font:{family:'JetBrains Mono',size:10},callback:v=>v+'%'}},
+        y:{grid:{display:false},ticks:{color:'#c8cde0',font:{family:'Inter',size:11}}}
+      }}
+  });
+
+  const top12=[...DATA].sort((a,b)=>b.valor_venda-a.valor_venda).slice(0,12);
+  const maxF=top12[0].valor_venda;
+  const rl=document.getElementById('rankList');
+  top12.forEach((p,i)=>{
+    const pct=(p.valor_venda/maxF*100).toFixed(0);
+    const color=cc(p.cmv);
+    rl.innerHTML+=`
+    <div style="display:grid;grid-template-columns:22px 1fr 90px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #1e2235;">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted2);text-align:right;font-weight:700;">${i+1}</span>
+      <div>
+        <div style="font-size:0.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.produto}</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:1px;">${p.categoria}</div>
+        <div style="height:3px;background:var(--s3);border-radius:2px;margin-top:4px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px;"></div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:0.8rem;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);">${R(p.valor_venda,0)}</div>
+        <div style="font-size:0.67rem;font-family:'JetBrains Mono',monospace;color:${color};margin-top:2px;">CMV ${(p.cmv*100).toFixed(0)}%</div>
+      </div>
+    </div>`;
+  });
+}
+
+// ─── GRUPOS LIST ─────────────────────────────────────────
+function buildGrupos(){
+  const grid=document.getElementById('grupoGrid');
+  CAT_LIST.forEach((c,i)=>{
+    const s=catStats(c);
+    const col=PAL[i%PAL.length];
+    const color=cc(s.cmvAvg);
+    const pct=Math.min(s.cmvAvg/0.6*100,100).toFixed(0);
+    grid.innerHTML+=`
+    <div class="grupo-card" style="--gc:${col}" onclick="openGrupo('${c.cat.replace(/'/g,"\\'")}')">
+      <div class="gname">${c.cat}</div>
+      <div class="gfat">${R(s.fat,0)}</div>
+      <div class="gsub">${N(s.qtd)} unid · ${s.n} itens</div>
+      <div class="gcmv-row">
+        <div>
+          <div class="gcmv-lbl">CMV Médio</div>
+          <div class="gcmv-val" style="color:${color}">${(s.cmvAvg*100).toFixed(1)}%</div>
+          <div class="cmvbar"><div class="cmvbar-fill" style="width:${pct}%;background:${color};"></div></div>
+        </div>
+      </div>
+    </div>`;
+  });
+}
+
+// ─── GRUPO DRILL ─────────────────────────────────────────
+let currentCat=null;
+let sortState={col:'valor_venda',dir:-1};
+let activeFilter='todos';
+let itemCharts=[];
+
+function setFilter(f,btn){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderItemTable();
+}
+
+function openGrupo(cat){
+  currentCat=CATS[cat];
+  document.getElementById('grupos-list-view').style.display='none';
+  document.getElementById('itens-view').style.display='block';
+  document.getElementById('grupoDrillTitle').textContent=cat;
+  document.getElementById('itemSearch').value='';
+  activeFilter='todos';
+  document.querySelectorAll('.filter-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  sortState={col:'valor_venda',dir:-1};
+  rebuildItemCharts();
+  renderItemTable();
+  renderGrupoKpis();
+}
+
+function renderGrupoKpis(){
+  const s=catStats(currentCat);
+  const color=cc(s.cmvAvg);
+  document.getElementById('grupoKpisRow').innerHTML=`
+    <div class="gkpi"><div class="gv">${R(s.fat,0)}</div><div class="gl">Faturamento</div></div>
+    <div class="gkpi"><div class="gv">${N(s.qtd)}</div><div class="gl">Qtd Vendida</div></div>
+    <div class="gkpi"><div class="gv" style="color:${color}">${(s.cmvAvg*100).toFixed(1)}%</div><div class="gl">CMV Médio</div></div>
+    <div class="gkpi"><div class="gv">${s.n}</div><div class="gl">Itens</div></div>
+  `;
+}
+
+function voltarGrupos(){
+  document.getElementById('grupos-list-view').style.display='block';
+  document.getElementById('itens-view').style.display='none';
+  itemCharts.forEach(ch=>ch.destroy());
+  itemCharts=[];
+  // Rebuild group grid stats after edits
+  document.getElementById('grupoGrid').innerHTML='';
+  buildGrupos();
+}
+
+function sortItems(col){
+  if(sortState.col===col) sortState.dir*=-1;
+  else{sortState.col=col;sortState.dir=-1;}
+  document.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sort-asc','sort-desc');});
+  const cols=['produto','qtd_vendida','valor_venda','preco_medio','custo_unitario','margem','cmv'];
+  const idx=cols.indexOf(col);
+  const ths=document.querySelectorAll('#itensTbody').item(0)?.closest('table')?.querySelectorAll('thead th');
+  if(ths&&ths[idx]) ths[idx].classList.add(sortState.dir===-1?'sort-desc':'sort-asc');
+  renderItemTable();
+}
+
+function renderItemTable(){
+  if(!currentCat) return;
+  const q=document.getElementById('itemSearch').value.toLowerCase().trim();
+  let items=[...currentCat.items];
+
+  if(q) items=items.filter(p=>p.produto.toLowerCase().includes(q));
+  if(activeFilter==='alto') items=items.filter(p=>p.cmv>0.35);
+  if(activeFilter==='eficiente') items=items.filter(p=>p.cmv<=0.20&&p.valor_venda>100);
+
+  items.sort((a,b)=>{
+    const av=a[sortState.col],bv=b[sortState.col];
+    if(typeof av==='string') return av.localeCompare(bv)*sortState.dir;
+    return (bv-av)*sortState.dir;
+  });
+
+  document.getElementById('tblCount').textContent=items.length+' itens';
+
+  const tbody=document.getElementById('itensTbody');
+  if(!items.length){
+    tbody.innerHTML=`<tr><td colspan="8" class="empty-row">Nenhum produto encontrado</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=items.map(p=>{
+    const color=cc(p.cmv);
+    const pct=Math.min(p.cmv/0.6*100,100).toFixed(0);
+    const cmvPct=(p.cmv*100).toFixed(1);
+    let tag='';
+    if(p.cmv>0.45) tag=`<span class="tag bad">⚠ Alto</span>`;
+    else if(p.cmv>0.35) tag=`<span class="tag warn">↑ Atenção</span>`;
+    else if(p.cmv<=0.15&&p.valor_venda>300) tag=`<span class="tag star">★ Eficiente</span>`;
+    else tag=`<span class="tag ok">✓ OK</span>`;
+
+    const margemColor=p.margem>=0?'var(--good)':'var(--danger)';
+    const pid=p.produto.replace(/[^a-zA-Z0-9]/g,'_');
+
+    return `<tr id="row_${pid}">
+      <td class="name-cell"><span class="dot" style="background:${color}"></span>${p.produto}</td>
+      <td class="mono">${N(p.qtd_vendida)}</td>
+      <td class="mono" style="color:var(--text)">${R(p.valor_venda,2)}</td>
+      <td class="editable" onclick="startEdit(this,'${pid}','preco_medio')">
+        <div class="edit-val">
+          <span class="ev-text">R$ ${p.preco_medio>0?p.preco_medio.toFixed(2):'—'}</span>
+          <span class="pencil">✏</span>
+        </div>
+      </td>
+      <td class="editable" onclick="startEdit(this,'${pid}','custo_unitario')">
+        <div class="edit-val">
+          <span class="ev-text">R$ ${p.custo_unitario.toFixed(2)}</span>
+          <span class="pencil">✏</span>
+        </div>
+      </td>
+      <td class="mono" style="color:${margemColor};font-weight:600">${R(p.margem,2)}</td>
+      <td>
+        <div class="cmv-cell">
+          <div class="cmv-bar-bg"><div class="cmv-bar-fill" id="bar_${pid}" style="width:${pct}%;background:${color};"></div></div>
+          <span class="cmv-pct" id="cmvpct_${pid}" style="color:${color}">${cmvPct}%</span>
+        </div>
+      </td>
+      <td id="tag_${pid}">${tag}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── INLINE EDIT ─────────────────────────────────────────
+function startEdit(cell, pid, field){
+  if(cell.querySelector('.edit-input')) return; // already editing
+  const item=currentCat.items.find(p=>p.produto.replace(/[^a-zA-Z0-9]/g,'_')===pid);
+  if(!item) return;
+  const cur=field==='preco_medio'?item.preco_medio:item.custo_unitario;
+  const evDiv=cell.querySelector('.edit-val');
+  evDiv.innerHTML=`<input class="edit-input" type="number" step="0.01" min="0" value="${cur.toFixed(2)}" 
+    onblur="commitEdit(this,'${pid}','${field}')" 
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelEdit(this,event,'${pid}','${field}',${cur})">`;
+  evDiv.querySelector('input').focus();
+  evDiv.querySelector('input').select();
+}
+
+function cancelEdit(input,ev,pid,field,orig){
+  ev.stopPropagation();
+  const cell=input.closest('td');
+  cell.querySelector('.edit-val').innerHTML=`<span class="ev-text">R$ ${parseFloat(orig).toFixed(2)}</span><span class="pencil">✏</span>`;
+}
+
+function commitEdit(input,pid,field){
+  const val=parseFloat(input.value);
+  const item=currentCat.items.find(p=>p.produto.replace(/[^a-zA-Z0-9]/g,'_')===pid);
+  if(!item||isNaN(val)||val<0){
+    const cell=input.closest('td');
+    const orig=field==='preco_medio'?item.preco_medio:item.custo_unitario;
+    cell.querySelector('.edit-val').innerHTML=`<span class="ev-text">R$ ${orig.toFixed(2)}</span><span class="pencil">✏</span>`;
+    return;
+  }
+  item[field]=val;
+  // Recalc
+  if(item.preco_medio>0) item.cmv=item.custo_unitario/item.preco_medio;
+  item.margem=item.preco_medio-item.custo_unitario;
+
+  // Update cell display
+  const cell=input.closest('td');
+  cell.querySelector('.edit-val').innerHTML=`<span class="ev-text">R$ ${val.toFixed(2)}</span><span class="pencil">✏</span>`;
+
+  // Update CMV bar + tag live
+  const color=cc(item.cmv);
+  const pct=Math.min(item.cmv/0.6*100,100).toFixed(0);
+  const cmvPct=(item.cmv*100).toFixed(1);
+  const barEl=document.getElementById('bar_'+pid);
+  const pctEl=document.getElementById('cmvpct_'+pid);
+  const tagEl=document.getElementById('tag_'+pid);
+  const dotEl=document.querySelector(`#row_${pid} .dot`);
+  const margemEl=document.querySelector(`#row_${pid} td:nth-child(6)`);
+
+  if(barEl){barEl.style.width=pct+'%';barEl.style.background=color;}
+  if(pctEl){pctEl.textContent=cmvPct+'%';pctEl.style.color=color;}
+  if(dotEl) dotEl.style.background=color;
+  if(margemEl){
+    margemEl.textContent=R(item.margem,2);
+    margemEl.style.color=item.margem>=0?'var(--good)':'var(--danger)';
+  }
+  if(tagEl){
+    let tag='';
+    if(item.cmv>0.45) tag=`<span class="tag bad">⚠ Alto</span>`;
+    else if(item.cmv>0.35) tag=`<span class="tag warn">↑ Atenção</span>`;
+    else if(item.cmv<=0.15&&item.valor_venda>300) tag=`<span class="tag star">★ Eficiente</span>`;
+    else tag=`<span class="tag ok">✓ OK</span>`;
+    tagEl.innerHTML=tag;
+  }
+  // Re-render kpis
+  renderGrupoKpis();
+  // Rebuild charts
+  rebuildItemCharts();
+}
+
+// ─── MINI CHARTS ─────────────────────────────────────────
+function rebuildItemCharts(){
+  itemCharts.forEach(ch=>ch.destroy());
+  itemCharts=[];
+  if(!currentCat) return;
+
+  const top=[...currentCat.items].sort((a,b)=>b.valor_venda-a.valor_venda).slice(0,15);
+  const lbls=top.map(p=>p.produto.length>20?p.produto.slice(0,20)+'…':p.produto);
+
+  const ch1=new Chart(document.getElementById('cItemCMV'),{
+    type:'bar',
+    data:{labels:lbls,datasets:[{
+      data:top.map(p=>+(p.cmv*100).toFixed(1)),
+      backgroundColor:top.map(p=>cc(p.cmv)+'99'),
+      borderColor:top.map(p=>cc(p.cmv)),
+      borderWidth:1.5,borderRadius:4
+    }]},
+    options:{indexAxis:'y',responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw}%`}}},
+      scales:{
+        x:{grid:{color:'#1e2235'},min:0,max:60,ticks:{color:'#8890b0',font:{family:'JetBrains Mono',size:9},callback:v=>v+'%'}},
+        y:{grid:{display:false},ticks:{color:'#c8cde0',font:{family:'Inter',size:10}}}
+      }}
+  });
+
+  const ch2=new Chart(document.getElementById('cItemFat'),{
+    type:'bar',
+    data:{labels:lbls,datasets:[{
+      data:top.map(p=>p.valor_venda),
+      backgroundColor:top.map((_,i)=>PAL[i%PAL.length]+'99'),
+      borderColor:top.map((_,i)=>PAL[i%PAL.length]),
+      borderWidth:1.5,borderRadius:4
+    }]},
+    options:{indexAxis:'y',responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${R(ctx.raw,0)}`}}},
+      scales:{
+        x:{grid:{color:'#1e2235'},ticks:{color:'#8890b0',font:{family:'JetBrains Mono',size:9},callback:v=>v>=1000?(v/1000).toFixed(1)+'K':v}},
+        y:{grid:{display:false},ticks:{color:'#c8cde0',font:{family:'Inter',size:10}}}
+      }}
+  });
+
+  itemCharts=[ch1,ch2];
+}
+
+// ─── OPORTUNIDADES ───────────────────────────────────────
+let opTop=3, opFat='todos', opFatBtn=null;
+
+function setOpTop(n, btn){
+  opTop=n;
+  document.querySelectorAll('.op-btn').forEach(b=>{
+    if(['3','5','10'].includes(b.textContent.replace('Top ','').trim())) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderOportunidades();
+}
+
+function setOpFat(f, btn){
+  opFat=f;
+  ['todos','fat500','qtd50'].forEach(()=>{});
+  // deactivate fat filter buttons only
+  btn.closest('.op-filters').querySelectorAll('.op-btn').forEach(b=>{
+    if(b.textContent.includes('Todos')||b.textContent.includes('Fat')||b.textContent.includes('Qtd')) b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderOportunidades();
+}
+
+function actionChips(p){
+  const chips=[];
+  if(p.cmv<=0.10) chips.push('★ Destaque no cardápio');
+  if(p.cmv<=0.15) chips.push('🎯 Foco de venda');
+  if(p.qtd_vendida>=100) chips.push('📈 Alto volume');
+  if(p.qtd_vendida<20 && p.cmv<=0.20) chips.push('💡 Potencial oculto');
+  if(p.valor_venda>=1000) chips.push('💰 Alto faturamento');
+  if(p.margem>=30) chips.push('✅ Margem excelente');
+  if(p.margem>=15 && p.margem<30) chips.push('👍 Boa margem');
+  chips.push('🍽 Treinar equipe');
+  return chips.slice(0,3);
+}
+
+function toggleOpGrupo(id){
+  const body=document.getElementById('opbody_'+id);
+  const chev=document.getElementById('opchev_'+id);
+  if(body.classList.toggle('collapsed')){
+    chev.textContent='▶';
+  } else {
+    chev.textContent='▼';
+  }
+}
+
+function renderOportunidades(){
+  const q=document.getElementById('opSearch')?.value.toLowerCase().trim()||'';
+
+  // Build KPIs
+  const allOps=[];
+  CAT_LIST.forEach(c=>{
+    const sorted=[...c.items].filter(p=>p.cmv>0&&p.valor_venda>0).sort((a,b)=>a.cmv-b.cmv);
+    sorted.slice(0,opTop).forEach(p=>allOps.push({...p,_cat:c.cat}));
+  });
+  const avgCMV=allOps.length?allOps.reduce((s,p)=>s+p.cmv,0)/allOps.length:0;
+  const totalFat=allOps.reduce((s,p)=>s+p.valor_venda,0);
+  const totalQtd=allOps.reduce((s,p)=>s+p.qtd_vendida,0);
+  const abaixo20=allOps.filter(p=>p.cmv<=0.20).length;
+
+  document.getElementById('opKpiRow').innerHTML=`
+    <div class="kpi" style="--kc:#34d399">
+      <div class="lb">Itens Selecionados</div>
+      <div class="val">${allOps.length}</div>
+      <div class="sub">Melhores por grupo (Top ${opTop})</div>
+      <span class="pill g">✓ Alta eficiência</span>
+    </div>
+    <div class="kpi" style="--kc:#60a5fa">
+      <div class="lb">CMV Médio do Recorte</div>
+      <div class="val">${(avgCMV*100).toFixed(1)}%</div>
+      <div class="sub">vs 28,2% da média geral</div>
+      <span class="pill g">↓ Abaixo da média</span>
+    </div>
+    <div class="kpi" style="--kc:#fbbf24">
+      <div class="lb">Faturamento do Recorte</div>
+      <div class="val">${R(totalFat,0)}</div>
+      <div class="sub">${(totalFat/TOTAL_FAT*100).toFixed(1)}% do total</div>
+      <span class="pill w">Fev 2026</span>
+    </div>
+    <div class="kpi" style="--kc:#a78bfa">
+      <div class="lb">CMV ≤ 20%</div>
+      <div class="val">${abaixo20}</div>
+      <div class="sub">Itens excelentes para focar</div>
+      <span class="pill g">★ Prioridade máxima</span>
+    </div>`;
+
+  // Build groups
+  const container=document.getElementById('opGrupos');
+  container.innerHTML='';
+
+  CAT_LIST.forEach((c,ci)=>{
+    let items=[...c.items].filter(p=>p.cmv>0&&p.valor_venda>0).sort((a,b)=>a.cmv-b.cmv).slice(0,opTop);
+
+    // Apply fat/qty filter
+    if(opFat==='fat500') items=items.filter(p=>p.valor_venda>=500);
+    if(opFat==='qtd50') items=items.filter(p=>p.qtd_vendida>=50);
+
+    // Apply search
+    if(q) items=items.filter(p=>p.produto.toLowerCase().includes(q)||c.cat.toLowerCase().includes(q));
+
+    if(!items.length) return;
+
+    const groupCMV=items.reduce((s,p)=>s+p.cmv,0)/items.length;
+    const groupFat=items.reduce((s,p)=>s+p.valor_venda,0);
+    const col=PAL[ci%PAL.length];
+    const id='og'+ci;
+
+    const itemsHTML=items.map((p,i)=>{
+      const color=cc(p.cmv);
+      const chips=actionChips(p);
+      return `<div class="op-item" style="--ic:${color}">
+        <div class="op-rank">#${i+1}</div>
+        <div class="op-name">${p.produto}</div>
+        <div class="op-cmv-big" style="color:${color}">${(p.cmv*100).toFixed(1)}%</div>
+        <div class="op-cmv-lbl">CMV</div>
+        <div class="op-item-stats">
+          <div class="op-stat"><div class="ov">${R(p.valor_venda,0)}</div><div class="ol">Faturamento</div></div>
+          <div class="op-stat"><div class="ov">${N(p.qtd_vendida)}</div><div class="ol">Qtd Vendida</div></div>
+          <div class="op-stat"><div class="ov">${R(p.preco_medio,2)}</div><div class="ol">Preço Médio</div></div>
+          <div class="op-stat"><div class="ov" style="color:${p.margem>=0?'var(--good)':'var(--danger)'}">${R(p.margem,2)}</div><div class="ol">Margem</div></div>
+        </div>
+        <div class="op-action-chips">${chips.map(ch=>`<span class="chip">${ch}</span>`).join('')}</div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML+=`
+    <div class="op-grupo-block">
+      <div class="op-grupo-head" onclick="toggleOpGrupo('${id}')">
+        <div class="op-grupo-name">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0;"></span>
+          ${c.cat}
+          <span class="op-grupo-badge">${items.length} itens</span>
+        </div>
+        <div class="op-grupo-meta">
+          <span>CMV médio: <strong style="color:${cc(groupCMV)}">${(groupCMV*100).toFixed(1)}%</strong></span>
+          <span>Fat: <strong style="color:var(--accent)">${R(groupFat,0)}</strong></span>
+          <span id="opchev_${id}" class="op-chevron">▼</span>
+        </div>
+      </div>
+      <div class="op-grupo-body" id="opbody_${id}">${itemsHTML}</div>
+    </div>`;
+  });
+
+  if(!container.innerHTML){
+    container.innerHTML=`<div class="op-empty">Nenhum item encontrado com os filtros selecionados.</div>`;
+  }
+}
+
+// ─── INIT ────────────────────────────────────────────────
+buildDashboard();
+buildGrupos();
+renderOportunidades();
+</script>
+</body>
+</html>
