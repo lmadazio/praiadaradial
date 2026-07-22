@@ -114,8 +114,8 @@ thead th.sd::after{content:" ↓";color:var(--accent);}
 tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:rgba(255,255,255,.018);}
-tbody td{padding:8px 11px;font-size:0.77rem;color:var(--text2);vertical-align:middle;}
-tbody td.nc{font-weight:600;color:var(--text);font-size:0.79rem;}
+tbody td{padding:8px 11px;font-size:0.77rem;color:var(--text2);vertical-align:middle;white-space:nowrap;}
+tbody td.nc{font-weight:600;color:var(--text);font-size:0.79rem;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
 tbody td.mo{font-family:'JetBrains Mono',monospace;font-size:0.72rem;}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;flex-shrink:0;}
 .cmvc{display:flex;align-items:center;gap:6px;}
