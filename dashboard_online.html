@@ -612,19 +612,35 @@ function renderPanel(){
         <input class="ts" id="iSearch" placeholder="🔍 Buscar…" oninput="renderTbl()">
       </div>
       <div class="en"><span class="ds"></span><strong style="color:var(--accent)">Preço</strong> e <strong style="color:var(--accent)">Custo</strong> editáveis — clique. ⠿ reordena. <strong style="color:var(--accent3)">↗</strong> muda grupo. <strong style="color:var(--danger)">🗑</strong> apaga.</div>
-      <div style="overflow-x:auto;">
-      <table><thead><tr>
-        <th style="width:20px;"></th>
-        <th onclick="sortI('produto')">Produto</th>
-        <th onclick="sortI('qtd_vendida')">Qtd</th>
-        <th onclick="sortI('valor_venda')">Faturamento</th>
-        <th onclick="sortI('preco_medio')" style="color:var(--accent)">Preço ✏</th>
-        <th onclick="sortI('custo_unitario')" style="color:var(--accent)">Custo ✏</th>
-        <th onclick="sortI('margem')">Margem</th>
-        <th onclick="sortI('cmv')">CMV %</th>
-        <th>Status</th>
-        <th colspan="2"></th>
-      </tr></thead><tbody id="iTbody"></tbody></table>
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed;min-width:900px;">
+        <colgroup>
+          <col style="width:28px;">
+          <col style="width:200px;">
+          <col style="width:70px;">
+          <col style="width:110px;">
+          <col style="width:110px;">
+          <col style="width:110px;">
+          <col style="width:110px;">
+          <col style="width:130px;">
+          <col style="width:80px;">
+          <col style="width:70px;">
+          <col style="width:40px;">
+        </colgroup>
+        <thead><tr>
+          <th style="padding:8px 6px;background:var(--s2);border-bottom:1px solid var(--border);white-space:nowrap;"></th>
+          <th onclick="sortI('produto')" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Produto</th>
+          <th onclick="sortI('qtd_vendida')" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Qtd</th>
+          <th onclick="sortI('valor_venda')" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Faturamento</th>
+          <th onclick="sortI('preco_medio')" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;font-size:0.62rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Preço ✏</th>
+          <th onclick="sortI('custo_unitario')" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;font-size:0.62rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Custo ✏</th>
+          <th onclick="sortI('margem')" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">Margem</th>
+          <th onclick="sortI('cmv')" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;">CMV %</th>
+          <th style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap;">Status</th>
+          <th colspan="2" style="padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);"></th>
+        </tr></thead>
+        <tbody id="iTbody"></tbody>
+      </table>
       </div>
     </div>
     <div class="mcr">
@@ -655,18 +671,18 @@ function renderTbl(){
     else if(p.cmv>0.35)tag=`<span class="tag warn">↑ Atenção</span>`;
     else if(p.cmv<=0.15&&p.valor_venda>300)tag=`<span class="tag star">★ Eficiente</span>`;
     else tag=`<span class="tag ok">✓ OK</span>`;
-    return `<tr id="row_${pid}" draggable="true" ondragstart="onDS(event,'${pid}')" ondragover="onDO(event)" ondrop="onDP(event,'${pid}')" ondragend="onDE()">
-      <td><span class="dh">⠿</span></td>
-      <td class="nc"><span class="dot" style="background:${color}"></span>${p.produto}</td>
-      <td class="mo">${N(p.qtd_vendida)}</td>
-      <td class="mo">${R(p.valor_venda,2)}</td>
-      <td style="white-space:nowrap;" onclick="startEdit(this,'${pid}','preco_medio')"><div class="ev"><span>R$ ${p.preco_medio>0?p.preco_medio.toFixed(2):'—'}</span><span class="pencil">✏</span></div></td>
-      <td style="white-space:nowrap;" onclick="startEdit(this,'${pid}','custo_unitario')"><div class="ev"><span>R$ ${p.custo_unitario.toFixed(2)}</span><span class="pencil">✏</span></div></td>
-      <td class="mo" style="color:${p.margem>=0?'var(--good)':'var(--danger)'};font-weight:600;">${R(p.margem,2)}</td>
-      <td><div class="cmvc"><div class="cbb"><div class="cbf" id="bar_${pid}" style="width:${pct}%;background:${color};"></div></div><span class="cp" id="pct_${pid}" style="color:${color}">${(p.cmv*100).toFixed(1)}%</span></div></td>
-      <td id="tag_${pid}">${tag}</td>
-      <td><button class="mb" onclick="openMo('${pid}','${p.produto.replace(/'/g,"\\'")}')">↗ Mover</button></td>
-      <td><button class="db" onclick="askDel('${pid}','${p.produto.replace(/'/g,"\\'")}')">🗑</button></td>
+    return `<tr id="row_${pid}" draggable="true" ondragstart="onDS(event,'${pid}')" ondragover="onDO(event)" ondrop="onDP(event,'${pid}')" ondragend="onDE()" style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 6px;vertical-align:middle;white-space:nowrap;width:28px;"><span class="dh">⠿</span></td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;font-weight:600;color:var(--text);font-size:0.79rem;"><span class="dot" style="background:${color}"></span>${p.produto}</td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text2);">${N(p.qtd_vendida)}</td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text2);">${R(p.valor_venda,2)}</td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;cursor:text;" onclick="startEdit(this,'${pid}','preco_medio')"><div class="ev"><span>R$ ${p.preco_medio>0?p.preco_medio.toFixed(2):'—'}</span><span class="pencil">✏</span></div></td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;cursor:text;" onclick="startEdit(this,'${pid}','custo_unitario')"><div class="ev"><span>R$ ${p.custo_unitario.toFixed(2)}</span><span class="pencil">✏</span></div></td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;color:${p.margem>=0?'var(--good)':'var(--danger)'};">${R(p.margem,2)}</td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;"><div class="cmvc"><div class="cbb"><div class="cbf" id="bar_${pid}" style="width:${pct}%;background:${color};"></div></div><span class="cp" id="pct_${pid}" style="color:${color}">${(p.cmv*100).toFixed(1)}%</span></div></td>
+      <td style="padding:8px 11px;vertical-align:middle;white-space:nowrap;" id="tag_${pid}">${tag}</td>
+      <td style="padding:8px 6px;vertical-align:middle;white-space:nowrap;"><button class="mb" onclick="openMo('${pid}','${p.produto.replace(/'/g,"\\'")}')">↗ Mover</button></td>
+      <td style="padding:8px 6px;vertical-align:middle;white-space:nowrap;"><button class="db" onclick="askDel('${pid}','${p.produto.replace(/'/g,"\\'")}')">🗑</button></td>
     </tr>`;
   }).join('');
 }
