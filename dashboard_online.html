@@ -106,7 +106,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .fb.active{background:var(--s2);color:var(--accent);border-color:var(--accent);}
 .en{font-size:0.66rem;color:var(--muted);padding:4px 14px 8px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
 .ds{width:4px;height:4px;border-radius:50%;background:var(--accent);flex-shrink:0;}
-table{width:100%;border-collapse:collapse;}
+table{width:100%;border-collapse:collapse;table-layout:auto;}
 thead th{font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:8px 11px;background:var(--s2);border-bottom:1px solid var(--border);text-align:left;cursor:pointer;white-space:nowrap;user-select:none;}
 thead th:hover{color:var(--text);}
 thead th.sa::after{content:" ↑";color:var(--accent);}
@@ -115,7 +115,7 @@ tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:rgba(255,255,255,.018);}
 tbody td{padding:8px 11px;font-size:0.77rem;color:var(--text2);vertical-align:middle;white-space:nowrap;}
-tbody td.nc{font-weight:600;color:var(--text);font-size:0.79rem;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+tbody td.nc{font-weight:600;color:var(--text);font-size:0.79rem;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis;}
 tbody td.mo{font-family:'JetBrains Mono',monospace;font-size:0.72rem;}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;flex-shrink:0;}
 .cmvc{display:flex;align-items:center;gap:6px;}
@@ -127,7 +127,7 @@ tbody td.mo{font-family:'JetBrains Mono',monospace;font-size:0.72rem;}
 .tag.warn{background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.2);}
 .tag.bad{background:rgba(248,113,113,.12);color:var(--danger);border:1px solid rgba(248,113,113,.2);}
 .tag.star{background:rgba(96,165,250,.1);color:var(--accent3);border:1px solid rgba(96,165,250,.2);}
-.ev{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;transition:background .12s;cursor:text;}
+.ev{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;transition:background .12s;cursor:text;white-space:nowrap;}
 .ev:hover{background:var(--s3);}
 .pencil{opacity:0;font-size:0.55rem;color:var(--muted);}
 .ev:hover .pencil{opacity:1;}
@@ -660,8 +660,8 @@ function renderTbl(){
       <td class="nc"><span class="dot" style="background:${color}"></span>${p.produto}</td>
       <td class="mo">${N(p.qtd_vendida)}</td>
       <td class="mo">${R(p.valor_venda,2)}</td>
-      <td onclick="startEdit(this,'${pid}','preco_medio')"><div class="ev"><span>R$ ${p.preco_medio>0?p.preco_medio.toFixed(2):'—'}</span><span class="pencil">✏</span></div></td>
-      <td onclick="startEdit(this,'${pid}','custo_unitario')"><div class="ev"><span>R$ ${p.custo_unitario.toFixed(2)}</span><span class="pencil">✏</span></div></td>
+      <td style="white-space:nowrap;" onclick="startEdit(this,'${pid}','preco_medio')"><div class="ev"><span>R$ ${p.preco_medio>0?p.preco_medio.toFixed(2):'—'}</span><span class="pencil">✏</span></div></td>
+      <td style="white-space:nowrap;" onclick="startEdit(this,'${pid}','custo_unitario')"><div class="ev"><span>R$ ${p.custo_unitario.toFixed(2)}</span><span class="pencil">✏</span></div></td>
       <td class="mo" style="color:${p.margem>=0?'var(--good)':'var(--danger)'};font-weight:600;">${R(p.margem,2)}</td>
       <td><div class="cmvc"><div class="cbb"><div class="cbf" id="bar_${pid}" style="width:${pct}%;background:${color};"></div></div><span class="cp" id="pct_${pid}" style="color:${color}">${(p.cmv*100).toFixed(1)}%</span></div></td>
       <td id="tag_${pid}">${tag}</td>
