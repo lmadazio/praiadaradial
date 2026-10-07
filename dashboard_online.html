@@ -500,7 +500,8 @@ async function resetMonth(){
 }
 
 // HELPERS
-const gd=()=>DATA[cur];
+function normP(p){if(p.cmv===undefined)p.cmv=p.cmv_pct!=null?p.cmv_pct/100:(p.preco_medio>0?p.custo_unitario/p.preco_medio:0);return p;}
+const gd=()=>DATA[cur].map(normP);
 function getCats(d){
   const m={};(d||gd()).forEach(p=>{if(!m[p.categoria])m[p.categoria]={cat:p.categoria,items:[]};m[p.categoria].items.push(p);});return m;
 }
